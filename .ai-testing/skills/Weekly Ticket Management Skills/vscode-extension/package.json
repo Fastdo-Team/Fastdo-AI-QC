@@ -1,0 +1,121 @@
+{
+  "name": "fastdo-weekly-pipeline",
+  "displayName": "Fastdo – Pipeline ticket tuần",
+  "description": "Mở Visual Pipeline ticket tuần ngay trong VS Code, tự làm mới khi kết quả test thay đổi.",
+  "version": "1.6.0",
+  "publisher": "fastdo-qc",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onUri"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "fastdoPipeline.open",
+        "title": "Mở Pipeline ticket tuần",
+        "category": "Fastdo",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "fastdoPipeline.refresh",
+        "title": "Làm mới Pipeline ticket tuần",
+        "category": "Fastdo",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "fastdoPipeline.openDashboard",
+        "title": "Mở Dashboard QC Tuần",
+        "category": "Fastdo",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "fastdoPipeline.refreshDashboard",
+        "title": "Làm mới Dashboard QC Tuần",
+        "category": "Fastdo",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "fastdoPipeline.refresh",
+          "when": "activeWebviewPanelId == fastdoPipeline",
+          "group": "navigation"
+        },
+        {
+          "command": "fastdoPipeline.refreshDashboard",
+          "when": "activeWebviewPanelId == fastdoDashboard",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "fastdoPipeline.open",
+        "key": "ctrl+alt+p"
+      },
+      {
+        "command": "fastdoPipeline.openDashboard",
+        "key": "ctrl+alt+d"
+      }
+    ],
+    "configuration": {
+      "title": "Fastdo Pipeline",
+      "properties": {
+        "fastdoPipeline.folder": {
+          "type": "string",
+          "default": "D:/GIANG/a/FASTDO/Fastdo/fastdo-testing/.ai-testing/skills/Weekly Ticket Management Skills",
+          "description": "Thư mục chứa Weekly_Ticket_Management_Skills.js và weekly_state.json"
+        },
+        "fastdoPipeline.automationRoot": {
+          "type": "string",
+          "default": "D:/GIANG/a/Automation",
+          "description": "Thư mục Automation (chứa AI TESTING/Ticket_<ID>/results_<ID>.json) — theo dõi để tự làm mới"
+        },
+        "fastdoPipeline.theme": {
+          "type": "string",
+          "enum": [
+            "dark",
+            "light",
+            "auto"
+          ],
+          "default": "dark",
+          "description": "Màu nền Pipeline: dark = nền đen, light = nền sáng, auto = theo hệ điều hành"
+        },
+        "fastdoPipeline.serverDir": {
+          "type": "string",
+          "default": "D:/GIANG/a/FASTDO/Fastdo/Fastdo2/fastdo-server",
+          "description": "Repo fastdo-server — theo dõi nhánh đang checkout để cập nhật bước 2"
+        },
+        "fastdoPipeline.sendToClaude": {
+          "type": "boolean",
+          "default": true,
+          "description": "Bấm ✓/✕ trên Pipeline thì tự gửi nội dung cho Claude Code (terminal đang chạy claude)"
+        },
+        "fastdoPipeline.claudeTerminal": {
+          "type": "string",
+          "default": "",
+          "description": "Tên (một phần) terminal chạy Claude Code; để trống = tự nhận (tiêu đề có ✳ hoặc \"claude\")"
+        },
+        "fastdoPipeline.pollMinutes": {
+          "type": "number",
+          "default": 10,
+          "description": "Bao nhiêu phút tự kiểm tra PR GitHub + trạng thái KH Tuần một lần (khi tab Pipeline đang mở)"
+        },
+        "fastdoPipeline.dashboardFile": {
+          "type": "string",
+          "default": "Dashboard_QC_Tuan_Live.html",
+          "description": "Tên file Dashboard QC Tuần (trong fastdoPipeline.folder) do skill /weekly-dashboard tạo ra"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,705 @@
+<title>Dashboard QC Tuần</title>
+<style>
+/* layout: top bar -> KPI (phạm vi tuần | chất lượng test) -> ticket mới log (module Quy trình, click mở danh sách) -> ticket tuần thực hiện (module Plan) -> trend -> đề xuất trường mới */
+:root{
+  --bg:#f6f4ef; --surface:#ffffff; --surface-2:#edeadf; --border:rgba(30,26,18,.12); --border-strong:rgba(30,26,18,.22);
+  --text:#1f1b14; --text-2:#6b6356; --text-3:#9b927f;
+  --accent:#8a5a2f; --accent-bg:#f1e4d3; --accent-line:#c99a5f;
+  --ok:#3b6d11; --ok-bg:#e8f1dc; --ok-line:#7fae3f;
+  --warn:#9a5a06; --warn-bg:#faecd6; --warn-line:#e0a23b;
+  --bad:#a32d2d; --bad-bg:#fbe9e8; --bad-line:#dd6d6a;
+  --info:#1f5fa8; --info-bg:#e5f0fb; --info-line:#5c9bdd;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17140f; --surface:#1f1b14; --surface-2:#262016; --border:rgba(255,250,240,.12); --border-strong:rgba(255,250,240,.24);
+  --text:#f1ece1; --text-2:#b8ae9b; --text-3:#8a8170;
+  --accent:#e0b67c; --accent-bg:#3a2d18; --accent-line:#a97b3e;
+  --ok:#a6d37a; --ok-bg:#243a14; --ok-line:#5c8a2d;
+  --warn:#eec07e; --warn-bg:#3d2d10; --warn-line:#a9771f;
+  --bad:#f0a3a1; --bad-bg:#3d1f1e; --bad-line:#b24d4a;
+  --info:#9cc5ef; --info-bg:#162a3d; --info-line:#3d78b2;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#17140f; --surface:#1f1b14; --surface-2:#262016; --border:rgba(255,250,240,.12); --border-strong:rgba(255,250,240,.24);
+  --text:#f1ece1; --text-2:#b8ae9b; --text-3:#8a8170;
+  --accent:#e0b67c; --accent-bg:#3a2d18; --accent-line:#a97b3e;
+  --ok:#a6d37a; --ok-bg:#243a14; --ok-line:#5c8a2d;
+  --warn:#eec07e; --warn-bg:#3d2d10; --warn-line:#a9771f;
+  --bad:#f0a3a1; --bad-bg:#3d1f1e; --bad-line:#b24d4a;
+  --info:#9cc5ef; --info-bg:#162a3d; --info-line:#3d78b2;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Inter",system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3,.num{font-family:"Space Grotesk",system-ui,sans-serif}
+.num{font-variant-numeric:tabular-nums}
+main{max-width:1180px;margin:0 auto;padding-block:18px 60px}
+a{color:var(--accent)}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.topbar h1{font-size:19px;margin:0;font-weight:600}
+.seg{display:flex;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;font-size:12.5px;color:var(--text-2)}
+.seg button.on{background:var(--accent);color:#fff}
+select{font:inherit;font-size:12.5px;height:30px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--text);padding:0 8px}
+.src{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 18px}
+.src span{font-size:11px;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px}
+.src span b{color:var(--text)}
+.mock-flag{margin-left:auto;font-size:11px;color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:999px;padding:3px 10px}
+
+.grp-lbl{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin:18px 0 8px}
+.grp-lbl.link{all:unset;display:block;cursor:pointer;font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin:18px 0 8px;text-decoration:underline;text-underline-offset:3px}
+.grp-lbl.link:hover{color:var(--text)}
+.hlwrap{border-radius:14px;padding:6px;margin:-6px}
+.flash{animation:flashHi 1.6s ease-out}
+@keyframes flashHi{0%{box-shadow:0 0 0 3px var(--accent-line) inset;background:var(--accent-bg)}100%{box-shadow:0 0 0 0 transparent inset;background:transparent}}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.kpi-grid.row-b{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:900px){.kpi-grid,.kpi-grid.row-b{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;min-width:0}
+.kpi .lbl{font-size:11.5px;color:var(--text-2);display:flex;align-items:center;gap:5px}
+.kpi .val{font-size:26px;font-weight:600;margin-top:4px;display:flex;align-items:baseline;gap:6px}
+.kpi .val small{font-size:12px;font-weight:500;color:var(--text-2)}
+.kpi .sub{font-size:11.5px;margin-top:3px;color:var(--text-2)}
+.kpi.flag{border-color:var(--bad-line);background:var(--bad-bg)}
+.kpi.flag .lbl,.kpi.flag .val{color:var(--bad)}
+.kpi.clickable{all:unset;display:block;cursor:pointer;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;min-width:0}
+.kpi.clickable:hover{border-color:var(--accent-line)}
+.kpi.clickable .expand{font-size:11px;color:var(--accent);margin-top:6px;display:flex;align-items:center;gap:4px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+
+.sec{font-size:13.5px;font-weight:600;margin:22px 0 10px;display:flex;align-items:center;gap:8px}
+.sec .src-tag{font-weight:400;font-size:11px;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:2px 9px}
+.sec .cnt{font-weight:400;color:var(--text-2);font-size:12px;margin-left:auto}
+
+details.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0;overflow:hidden}
+details.panel[open]{padding-bottom:2px}
+details.panel summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+details.panel summary::-webkit-details-marker{display:none}
+details.panel summary .chev{margin-left:auto;font-size:11px;color:var(--text-2);transition:transform .15s}
+details.panel[open] summary .chev{transform:rotate(90deg)}
+details.panel .body{padding:0 16px 14px}
+
+.row2{display:grid;grid-template-columns:1.3fr 1fr;gap:12px}
+@media(max-width:860px){.row2{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;min-width:0}
+.card h3{font-size:12.5px;font-weight:600;margin:0 0 10px;color:var(--text-2)}
+
+.trend{display:flex;align-items:flex-end;gap:10px;height:120px;padding-top:6px}
+.trend .bar-grp{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.trend .stack{width:100%;max-width:34px;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden;height:92px}
+.trend .seg-b{width:100%}
+.trend .wk{font-size:10.5px;color:var(--text-3)}
+.trend .num{font-size:11px;color:var(--text-2)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--text-2)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.trend .bar-grp{cursor:pointer}
+.trend .bar-grp.sel .stack{box-shadow:0 0 0 2px var(--accent-line)}
+.trenddetail{margin-top:10px;font-size:12px;color:var(--text-2);background:var(--surface-2);border-radius:8px;padding:7px 10px}
+.trenddetail b{color:var(--text)}
+
+.donutwrap{display:flex;align-items:center;gap:16px}
+.donut{width:108px;height:108px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center}
+.donut .hole{width:68px;height:68px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut .hole b{font-size:18px;font-family:"Space Grotesk"}
+.donut .hole small{font-size:10px;color:var(--text-2)}
+.dlegend{font-size:12px;color:var(--text-2);display:flex;flex-direction:column;gap:7px}
+.dlegend span{display:flex;align-items:center;gap:6px}
+
+.hbar{height:28px;border-radius:6px;overflow:hidden;display:flex;width:100%}
+.hbar div{height:100%}
+.hbarlbl{display:flex;justify-content:space-between;font-size:11px;color:var(--text-2);margin-top:5px;flex-wrap:wrap;gap:6px}
+
+table{width:100%;border-collapse:collapse;font-size:12.3px}
+th,td{padding:7px 8px;text-align:left;border-top:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);font-weight:600;border-top:none}
+tbody tr:hover{background:var(--surface-2)}
+.tblwrap{overflow-x:auto}
+.chip{font-size:10.5px;padding:2px 8px;border-radius:999px;display:inline-block;white-space:nowrap}
+.chip.bug{background:var(--bad-bg);color:var(--bad)}
+.chip.update{background:var(--info-bg);color:var(--info)}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.chip.muted{background:var(--surface-2);color:var(--text-2);border:1px dashed var(--border-strong)}
+.chip.doing{background:var(--info-bg);color:var(--info)}
+.chip.cancel{background:var(--surface-2);color:var(--text-3);text-decoration:line-through}
+.aiprog{width:52px;height:6px;border-radius:3px;background:var(--surface-2);display:inline-block;overflow:hidden;vertical-align:middle;margin-right:5px}
+.aiprog i{display:block;height:100%;background:var(--ok-line)}
+
+.outplan{font-size:12px;color:var(--text-2)}
+.outplan ul{margin:6px 0 0;padding-left:16px}
+.outplan li{margin-bottom:5px}
+
+.propose{border:1.5px dashed var(--accent-line);background:var(--accent-bg);border-radius:14px;padding:16px 18px;margin-top:26px}
+.propose h2{font-size:14.5px;margin:0 0 4px;color:var(--accent);display:flex;align-items:center;gap:8px}
+.propose p.hint{font-size:12px;color:var(--text-2);margin:0 0 12px}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(max-width:760px){.pgrid{grid-template-columns:1fr}}
+.pitem{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.pitem .t{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px}
+.pitem .t .new{font-size:9.5px;background:var(--accent);color:#fff;border-radius:4px;padding:1px 5px;font-weight:600}
+.pitem .d{font-size:11.5px;color:var(--text-2);margin-top:4px}
+footer{margin-top:26px;font-size:11px;color:var(--text-3)}
+</style>
+<style id="aiScoreCss">
+.score-card{display:grid;grid-template-columns:180px 1fr;gap:18px;align-items:start}
+@media (max-width:720px){.score-card{grid-template-columns:1fr}}
+.score-big{text-align:center;padding:14px;border-radius:12px;background:var(--surface-2)}
+.score-big b{display:block;font:600 40px/1 "Space Grotesk",system-ui,sans-serif}
+.score-big .gr{display:inline-block;margin-top:6px;padding:2px 10px;border-radius:999px;font-weight:600}
+.gr.A{background:var(--ok-bg);color:var(--ok)}.gr.B{background:var(--info-bg);color:var(--info)}.gr.C{background:var(--warn-bg);color:var(--warn)}.gr.D{background:var(--bad-bg);color:var(--bad)}
+.crit{display:grid;grid-template-columns:minmax(120px,170px) 1fr 70px;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--border);font-size:13px}
+.crit:first-child{border-top:none}
+.crit .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}.crit .bar i{display:block;height:100%;background:var(--accent-line)}
+.crit .pts{text-align:right;font-variant-numeric:tabular-nums}
+.crit small{grid-column:2/4;color:var(--text-2);margin-top:-4px}
+.score-weeks{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.score-weeks span{padding:2px 8px;border-radius:6px;background:var(--surface-2);font-size:12px}
+details.rubric{margin-top:10px;font-size:12px;color:var(--text-2)}details.rubric li{margin:2px 0}
+</style>
+
+<main>
+  <div class="topbar">
+    <h1>Dashboard QC Tuần</h1>
+    <select id="weekSel" aria-label="Chọn tuần">
+      <option value="47">Tuần 47 · 16/11–22/11</option>
+      <option value="46">Tuần 46 · 09/11–15/11</option>
+      <option value="45">Tuần 45 · 26/10–01/11</option>
+      <option value="44">Tuần 44 · 19/10–25/10</option>
+    </select>
+    <div class="seg" role="tablist" aria-label="Xem theo">
+      <button class="on" id="viewWeek">Tuần</button>
+      <button id="viewMonth">Tháng</button>
+    </div>
+    <span class="mock-flag">Số liệu minh hoạ để duyệt giao diện — chưa nối dữ liệu thật</span>
+  </div>
+  <div class="src" style="margin-top:0">
+    <span id="refreshTag">Cập nhật lần cuối: <b id="refreshAt">—</b> · tự làm mới sau <b id="refreshCd">10:00</b></span>
+  </div>
+
+  <div class="src">
+    <span>Ticket tuần thực hiện: <b>module Plan</b></span>
+    <span>Ticket mới log: <b>module Quy trình xử lý ticket · theo "Thời gian Khởi tạo công việc"</b></span>
+    <span>PR: <b>GitHub fastdo-server</b></span>
+    <span>Testcase: <b>Sheet TESTCASE‑2026</b></span>
+  </div>
+
+  <div id="weekView">
+  <button class="grp-lbl link" id="lblPhamVi">Phạm vi tuần — bấm để xem chi tiết bên dưới</button>
+  <p style="font-size:11px;color:var(--text-2);margin:-4px 0 10px">Đổi tuần ở ô chọn trên cùng để so sánh KPI; danh sách ticket cụ thể bên dưới vẫn đang minh hoạ theo tuần 47.</p>
+  <div class="kpi-grid" id="wKpiA">
+    <div class="kpi">
+      <div class="lbl">Ticket tuần thực hiện</div>
+      <div class="val" id="wTicketThucHienVal">13</div>
+      <div class="sub" id="wTicketThucHienSub">Nguồn: module Plan — danh sách QC tick chạy test tuần 47</div>
+    </div>
+    <button class="kpi clickable" id="kpiNewTicket" aria-expanded="false" aria-controls="newTicketPanel">
+      <div class="lbl">Ticket mới log lên quy trình</div>
+      <div class="val" id="wNewTicketVal">9</div>
+      <div class="sub" id="wNewTicketSub">Tạo mới trong tuần, chưa tính ticket tồn từ tuần trước</div>
+      <div class="expand"><span>Bấm để xem danh sách</span><span class="chev">▸</span></div>
+    </button>
+    <button class="kpi clickable" id="kpiPrProd" aria-expanded="false" aria-controls="prTestPanel">
+      <div class="lbl">PR lên Production</div>
+      <div class="val" id="wPrVal">9 <small>/ 24 PR tuần</small></div>
+      <div class="sub" id="wPrSub">4 AI test · 1 QC test tay (nhãn Book QC) · 4 chưa test</div>
+      <div class="expand"><span>Bấm để xem ticket nào</span><span class="chev">▸</span></div>
+    </button>
+    <div class="kpi">
+      <div class="lbl"><span class="dot" style="background:var(--warn-line)"></span>Ngoài kế hoạch (module Plan)</div>
+      <div class="val" id="wOutVal">3 <small>/ 11 PR</small></div>
+      <div class="sub" id="wOutSub">1403, CHUA-RO-MA-1, KH01 — không nằm trong danh sách module Plan tuần này</div>
+    </div>
+  </div>
+
+  <div class="grp-lbl">Chất lượng test</div>
+  <div class="kpi-grid row-b" id="wKpiB">
+    <div class="kpi">
+      <div class="lbl">Ticket được AI Testing</div>
+      <div class="val" id="wAiVal">9 <small>/ 13 ticket tuần thực hiện</small></div>
+      <div class="sub" id="wAiSub">64% — 5 ticket chưa chạy test</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Testcase đã chạy</div>
+      <div class="val" id="wTcVal">186</div>
+      <div class="sub" id="wTcSub"><span style="color:var(--ok)">142 Pass</span> · <span style="color:var(--warn)">21 Suggest</span> · <span style="color:var(--bad)">14 Fail</span> · <span style="color:var(--text-2)">9 Pending</span></div>
+    </div>
+    <div class="kpi flag">
+      <div class="lbl">⚠ Lên Production chưa test xong</div>
+      <div class="val" id="wFlagVal">2</div>
+      <div class="sub" id="wFlagSub">1394, 1399 — PR merged production nhưng case chưa đủ Done</div>
+    </div>
+  </div>
+
+  <div class="hlwrap" id="grpPrTest">
+  <div class="sec" style="margin-top:26px">PR lên Production — theo phương thức test<span class="src-tag">Ticket tuần thực hiện, module Plan</span></div>
+  <details class="panel" id="prTestPanel" open>
+    <summary>Danh sách ticket có PR lên Production <span class="chev">▸</span></summary>
+    <div class="body">
+      <p style="font-size:11.5px;color:var(--text-2);margin:0 0 12px">Cách xác định: kiểm tra ticket trên <b>module Plan</b> có gắn nhãn <b>"Book QC"</b> hay không — có nhãn → QC test tay; không có nhãn mà đã có case chạy → AI test; chưa có case nào dù PR đã merge → chưa test.</p>
+      <div class="tblwrap">
+        <table>
+          <thead><tr><th>Ticket</th><th>Tên ticket</th><th>Phương thức test</th><th>Kết quả</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1393</td><td>Mất dữ liệu chỉnh sửa công khi đổi range Tgian</td><td><span class="chip ok">AI test</span></td><td><span class="chip ok">Pass</span></td></tr>
+            <tr><td class="num">1394</td><td>Khung giờ OT theo phòng ban</td><td><span class="chip muted">—</span></td><td><span class="chip warn">Chưa test</span></td></tr>
+            <tr><td class="num">1395</td><td>Bổ sung căn lề tin tức App + Web</td><td><span class="chip ok">AI test</span></td><td><span class="chip ok">Pass</span></td></tr>
+            <tr><td class="num">1398</td><td>Quy đổi phép thưởng theo công thực tế</td><td><span class="chip muted">—</span></td><td><span class="chip muted">Pending</span></td></tr>
+            <tr><td class="num">1399</td><td>Bổ sung người giao việc vào Todolist từ ca làm</td><td><span class="chip muted">—</span></td><td><span class="chip warn">Chưa test</span></td></tr>
+            <tr><td class="num">1400</td><td>Thành phần lương không hiển thị DS phòng ban</td><td><span class="chip ok">AI test</span></td><td><span class="chip ok">Pass</span></td></tr>
+            <tr><td class="num">1406</td><td>Option User/Phòng ban cho auto check-out</td><td><span class="chip muted">—</span></td><td><span class="chip warn">Chưa test</span></td></tr>
+            <tr><td class="num">1410</td><td>Quản lý cơ cấu nhân sự không thấy lương cơ bản</td><td><span class="chip doing">QC test tay (Book QC)</span></td><td><span class="chip doing">Doing</span></td></tr>
+            <tr><td class="num">1384</td><td>UPDATE HOA HƯNG</td><td><span class="chip ok">AI test</span></td><td><span class="chip ok">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+  </div>
+
+  <div class="hlwrap" id="grpNewTicket">
+  <div class="sec" style="margin-top:26px">Ticket mới log lên quy trình xử lý ticket<span class="src-tag">module Quy trình xử lý ticket</span><span class="cnt">9 ticket tạo mới tuần 47</span></div>
+  <details class="panel" id="newTicketPanel" open>
+    <summary>Danh sách ticket mới tạo trong tuần <span class="chev">▸</span></summary>
+    <div class="body">
+      <p style="font-size:11.5px;color:var(--text-2);margin:0 0 12px">Lọc trên module Quy trình xử lý ticket theo trường <b>"Thời gian Khởi tạo công việc"</b> nằm trong tuần 47 (16/11–22/11) — không phải ticket được chọn chạy/thực hiện trong tuần ở module Plan (xem mục riêng bên dưới).</p>
+      <div class="row2" style="margin-bottom:12px">
+        <div class="card">
+          <h3>Nguồn ticket Bug / Update</h3>
+          <div class="hbar">
+            <div style="width:36%;background:var(--bad-line)" title="QC tự phát hiện"></div>
+            <div style="width:14%;background:var(--warn-line)" title="Sales"></div>
+            <div style="width:10%;background:var(--info-line)" title="CS"></div>
+            <div style="width:40%;background:var(--ok-line)" title="Khách hàng"></div>
+          </div>
+          <div class="hbarlbl"><span>QC tự phát hiện 36%</span><span>Sales 14%</span><span>CS 10%</span><span>Khách hàng 40%</span></div>
+          <p style="font-size:11.5px;color:var(--text-2);margin:10px 0 0">Trường "nguồn ticket" hiện <b>chưa có</b> trong quy trình — số minh hoạ, xem đề xuất cuối trang.</p>
+        </div>
+        <div class="card">
+          <h3>Bug vs Update</h3>
+          <div class="hbar">
+            <div style="width:56%;background:var(--bad-line)"></div>
+            <div style="width:44%;background:var(--info-line)"></div>
+          </div>
+          <div class="hbarlbl"><span>5 Bug (56%)</span><span>4 Update (44%)</span></div>
+        </div>
+      </div>
+      <div class="tblwrap">
+        <table>
+          <thead><tr><th>Ticket</th><th>Tên ticket</th><th>Khởi tạo công việc</th><th>Loại</th><th>Module</th><th>Nguồn (đề xuất)</th><th>Nguyên nhân Bug</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1393</td><td>Mất dữ liệu chỉnh sửa công khi đổi range Tgian</td><td>16/11</td><td><span class="chip bug">Bug</span></td><td>Bảng công</td><td>Khách hàng</td><td>Độc lập (có sẵn)</td></tr>
+            <tr><td class="num">1394</td><td>Khung giờ OT theo phòng ban</td><td>16/11</td><td><span class="chip update">Update</span></td><td>OT</td><td>Sales</td><td>—</td></tr>
+            <tr><td class="num">1396</td><td>UI tên ca ở Xem trước phân ca nhanh</td><td>17/11</td><td><span class="chip bug">Bug</span></td><td>Phân ca</td><td>QC tự phát hiện</td><td>Nghi do Update Phân ca gần đây</td></tr>
+            <tr><td class="num">1397</td><td>Dính UI đăng nhập Webview ở module Lương</td><td>17/11</td><td><span class="chip bug">Bug</span></td><td>Lương</td><td>Khách hàng</td><td>Độc lập (có sẵn)</td></tr>
+            <tr><td class="num">1399</td><td>Bổ sung người giao việc vào Todolist từ ca làm</td><td>18/11</td><td><span class="chip update">Update</span></td><td>Todolist</td><td>CS</td><td>—</td></tr>
+            <tr><td class="num">1400</td><td>Thành phần lương không hiển thị DS phòng ban</td><td>18/11</td><td><span class="chip bug">Bug</span></td><td>Lương</td><td>QC tự phát hiện</td><td>Nghi do Update Lương tuần 45</td></tr>
+            <tr><td class="num">1403</td><td>Thêm bộ lọc Lương theo ngày</td><td>19/11</td><td><span class="chip update">Update</span></td><td>Lương</td><td>Khách hàng</td><td>—</td></tr>
+            <tr><td class="num">1408</td><td>APP nhận thông báo đẩy dù đã logout</td><td>20/11</td><td><span class="chip bug">Bug</span></td><td>Thông báo</td><td>Khách hàng</td><td>Độc lập (có sẵn)</td></tr>
+            <tr><td>CHUA-RO-MA-1</td><td>Liên kết KPI – lương thưởng</td><td>21/11</td><td><span class="chip update">Update</span></td><td>Lương/KPI</td><td>Sales</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:11.5px;color:var(--text-2);margin:8px 0 0">Module lấy theo đúng trường "Module" của từng ticket trên module Quy trình xử lý ticket.</p>
+
+      <div class="sec" style="margin:18px 0 10px">Phân tích Bug ↔ Update<span class="src-tag">minh hoạ — cần QC xác nhận</span></div>
+      <div class="row2">
+        <div class="card">
+          <h3>Bug do Update gây ra hay có sẵn</h3>
+          <div class="hbar">
+            <div style="width:40%;background:var(--warn-line)" title="Nghi do Update"></div>
+            <div style="width:60%;background:var(--ok-line)" title="Độc lập"></div>
+          </div>
+          <div class="hbarlbl"><span>2 Bug nghi do Update (40%)</span><span>3 Bug độc lập, có sẵn (60%)</span></div>
+          <p style="font-size:11.5px;color:var(--text-2);margin:10px 0 0">1396, 1400 nghi là regression sau Update module cùng chỗ; 1393, 1397, 1408 không thấy Update liên quan gần đây.</p>
+        </div>
+        <div class="card">
+          <h3>Update đáng chú ý — nghi phát sinh Bug</h3>
+          <ul style="font-size:12px;color:var(--text-2);margin:0;padding-left:16px">
+            <li style="margin-bottom:6px">Update Phân ca (tuần trước) → nghi gây <b>1396</b></li>
+            <li>Update lọc phòng ban Lương (tuần 45) → nghi gây <b>1400</b></li>
+          </ul>
+          <p style="font-size:11.5px;color:var(--text-2);margin:10px 0 0">Cần trường liên kết Update→Bug thật để thay số minh hoạ này.</p>
+        </div>
+      </div>
+    </div>
+  </details>
+  </div>
+
+  
+  <div class="hlwrap" id="grpScore">
+  <div class="sec" style="margin-top:26px">Điểm AI Testing<span class="src-tag">tự chấm sau các ticket</span><span class="cnt" id="scoreWeekCnt">—</span></div>
+  <div class="card" id="scoreWeek"><p style="color:var(--text-2)">Chưa có số liệu — chạy: node Weekly_Dashboard_Generator.js inject --week &lt;NN&gt;</p></div>
+  </div>
+
+  <div class="hlwrap" id="grpThucHien">
+  <div class="sec" style="margin-top:26px">Ticket tuần thực hiện<span class="src-tag">module Plan</span><span class="cnt">13 ticket · tuần 47</span></div>
+  <div class="row2" style="margin-bottom:12px">
+    <div class="card">
+      <h3>Độ phủ AI Testing</h3>
+      <div class="donutwrap">
+        <div class="donut" style="background:conic-gradient(var(--ok-line) 0 64%, var(--surface-2) 64% 100%)"><div class="hole"><b>64%</b><small>đã test</small></div></div>
+        <div class="dlegend">
+          <span><i class="dot" style="background:var(--ok-line)"></i>9 ticket · đã AI Testing</span>
+          <span><i class="dot" style="background:var(--surface-2);border:1px solid var(--border-strong)"></i>5 ticket · chưa chạy test</span>
+        </div>
+      </div>
+    </div>
+    <div class="card outplan">
+      <h3>PR ngoài kế hoạch — cần soát lại lý do</h3>
+      <ul>
+        <li><b class="num">1403</b> Thêm mục/bộ lọc Lương theo ngày — không có trong module Plan, deadline tự đặt 20/11</li>
+        <li><b>CHUA-RO-MA-1</b> Liên kết KPI–lương thưởng — chưa có mã ticket trong quy trình, chỉ thấy trên Fastdo</li>
+        <li><b>KH01</b> Làm lại UI quy định chấm công — PR #3678 không gắn mô tả ticket nào</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tblwrap">
+    <table>
+      <thead><tr>
+        <th>Ticket</th><th>Loại</th><th>Module</th><th>PR Production</th><th>AI Testing</th><th>Kết quả</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="num">1393</td><td><span class="chip bug">Bug</span></td><td>Bảng công</td><td><span class="chip ok">#3689 merged</span></td><td><span class="aiprog"><i style="width:100%"></i></span>15/15</td><td><span class="chip ok">Pass</span></td></tr>
+        <tr><td class="num">1394</td><td><span class="chip update">Update</span></td><td>OT</td><td><span class="chip ok">#3704 merged</span></td><td><span class="aiprog"><i style="width:0%"></i></span>0/12</td><td><span class="chip warn">Chưa test</span></td></tr>
+        <tr><td class="num">1395</td><td><span class="chip update">Update</span></td><td>Tin tức</td><td><span class="chip ok">#3705 merged</span></td><td><span class="aiprog"><i style="width:100%"></i></span>24/24</td><td><span class="chip ok">Pass</span></td></tr>
+        <tr><td class="num">1396</td><td><span class="chip bug">Bug</span></td><td>Phân ca</td><td><span class="chip warn">#3723 open</span></td><td><span class="aiprog"><i style="width:40%"></i></span>4/10</td><td><span class="chip bad">Fail</span></td></tr>
+        <tr><td class="num">1397</td><td><span class="chip bug">Bug</span></td><td>Lương</td><td><span class="chip muted">chưa có PR</span></td><td><span class="aiprog"><i style="width:0%"></i></span>0/0</td><td><span class="chip cancel">Cancel</span></td></tr>
+        <tr><td class="num">1398</td><td><span class="chip update">Update</span></td><td>Lương</td><td><span class="chip warn">#3680 merged</span></td><td><span class="aiprog"><i style="width:0%"></i></span>0/8</td><td><span class="chip muted">Pending</span></td></tr>
+        <tr><td class="num">1399</td><td><span class="chip update">Update</span></td><td>Todolist</td><td><span class="chip ok">#3718 merged</span></td><td><span class="aiprog"><i style="width:0%"></i></span>0/9</td><td><span class="chip warn">Chưa test</span></td></tr>
+        <tr><td class="num">1400</td><td><span class="chip bug">Bug</span></td><td>Lương</td><td><span class="chip ok">#3668 merged</span></td><td><span class="aiprog"><i style="width:100%"></i></span>11/11</td><td><span class="chip ok">Pass</span></td></tr>
+        <tr><td class="num">1406</td><td><span class="chip update">Update</span></td><td>Chấm công</td><td><span class="chip ok">#3719 merged</span></td><td><span class="aiprog"><i style="width:0%"></i></span>0/7</td><td><span class="chip warn">Chưa test</span></td></tr>
+        <tr><td class="num">1407</td><td><span class="chip update">Update</span></td><td>Bảng công</td><td><span class="chip muted">chưa có PR</span></td><td><span class="aiprog"><i style="width:60%"></i></span>2/3</td><td><span class="chip doing">Doing</span></td></tr>
+        <tr><td class="num">1410</td><td><span class="chip update">Update</span></td><td>Hồ sơ NS</td><td><span class="chip ok">#3728 merged</span></td><td><span class="aiprog"><i style="width:80%"></i></span>48/60</td><td><span class="chip doing">Doing</span></td></tr>
+        <tr><td class="num">1384</td><td><span class="chip update">Update</span></td><td>Hoa Hưng</td><td><span class="chip ok">#3699 merged</span></td><td><span class="aiprog"><i style="width:100%"></i></span>78/78</td><td><span class="chip ok">Pass</span></td></tr>
+        <tr><td>KH01</td><td><span class="chip update">Update</span></td><td>Chấm công</td><td><span class="chip muted">PR #3678 chưa rõ ticket</span></td><td><span class="aiprog"><i style="width:77%"></i></span>33/43</td><td><span class="chip doing">Doing</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  </div>
+
+  </div>
+
+  <div id="monthView" hidden>
+    <div class="grp-lbl" style="display:flex;align-items:center;gap:10px">Tổng hợp theo tháng<select id="monthSel" aria-label="Chọn tháng" style="height:26px;font-size:11px"><option value="T11">Tháng 11 · 2026</option><option value="T10">Tháng 10 · 2026</option><option value="T9">Tháng 9 · 2026</option></select></div>
+    <div class="kpi-grid" id="mKpiA"></div>
+    <div class="kpi-grid row-b" style="margin-top:10px" id="mKpiB"></div>
+    <div class="row2" style="margin-top:12px" id="mKpiC"></div>
+
+    <div class="sec" style="margin-top:22px">Điểm AI Testing theo tháng<span class="cnt" id="scoreMonthCnt">—</span></div>
+    <div class="card" id="scoreMonth"><p style="color:var(--text-2)">Chưa có số liệu — chạy: node Weekly_Dashboard_Generator.js inject --week &lt;NN&gt; --weeks &lt;các tuần trong tháng&gt;</p></div>
+
+
+    <div class="sec" style="margin-top:22px">So sánh giữa các tháng<span class="cnt">Tháng 9 – Tháng 11 / 2026</span></div>
+    <div class="row2">
+      <div class="card">
+        <h3>Testcase chạy / tháng — theo kết quả</h3>
+        <div class="trend" id="trendMonthTC"></div>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--ok-line)"></i>Pass</span>
+          <span><i class="dot" style="background:var(--warn-line)"></i>Suggest</span>
+          <span><i class="dot" style="background:var(--bad-line)"></i>Fail</span>
+          <span><i class="dot" style="background:var(--text-3)"></i>Pending</span>
+        </div>
+        <div class="trenddetail" id="trendMonthTCDetail">Bấm vào một cột để xem số chi tiết tháng đó.</div>
+      </div>
+      <div class="card">
+        <h3>PR lên Production / tháng — theo phương thức test</h3>
+        <div class="trend" id="trendMonthPR"></div>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--ok-line)"></i>AI test</span>
+          <span><i class="dot" style="background:var(--info-line)"></i>QC test tay</span>
+          <span><i class="dot" style="background:var(--text-3)"></i>Chưa test</span>
+        </div>
+        <div class="trenddetail" id="trendMonthPRDetail">Bấm vào một cột để xem số chi tiết tháng đó.</div>
+      </div>
+    </div>
+    <p style="font-size:11.5px;color:var(--text-2);margin:12px 0 0">Xem danh sách ticket từng cái → chuyển về chế độ <b>Tuần</b> và chọn tuần cần xem.</p>
+  </div>
+
+  <div class="sec">Xu hướng theo tuần (tháng 11)<span class="cnt">4 tuần gần nhất</span></div>
+  <div class="row2">
+    <div class="card">
+      <h3>Testcase chạy / tuần — theo kết quả</h3>
+      <div class="trend" id="trendTC"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--ok-line)"></i>Pass</span>
+        <span><i class="dot" style="background:var(--warn-line)"></i>Suggest</span>
+        <span><i class="dot" style="background:var(--bad-line)"></i>Fail</span>
+        <span><i class="dot" style="background:var(--text-3)"></i>Pending</span>
+      </div>
+      <div class="trenddetail" id="trendTCDetail">Bấm vào một cột để xem số chi tiết tuần đó.</div>
+    </div>
+    <div class="card">
+      <h3>Ticket tuần — module Plan vs ngoài kế hoạch</h3>
+      <div class="trend" id="trendPR"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--info-line)"></i>Trong module Plan</span>
+        <span><i class="dot" style="background:var(--warn-line)"></i>Ngoài kế hoạch</span>
+      </div>
+      <div class="trenddetail" id="trendPRDetail">Bấm vào một cột để xem số chi tiết tuần đó.</div>
+    </div>
+  </div>
+
+  <div class="propose">
+    <h2>💡 Đề xuất bổ sung trường — kiểm soát AI coding &amp; AI testing</h2>
+    <p class="hint">Các trường dưới đây chưa có trong quy trình xử lý ticket / module Plan hiện tại. Nếu thêm, dashboard tính được thêm các chỉ số rủi ro ở trên tự động thay vì QC gõ tay.</p>
+    <div class="pgrid">
+      <div class="pitem"><div class="t">Nguồn ticket <span class="new">mới</span></div><div class="d">QC tự phát hiện / Sales / CS / Khách hàng / Dev tự phát hiện — để tách tỷ lệ bug do QC bắt được trước khi ra ngoài.</div></div>
+      <div class="pitem"><div class="t">Ngày log lên quy trình <span class="new">mới</span></div><div class="d">Tách khỏi "ngày trên module Plan" — biết ticket phát sinh giữa tuần hay đã có từ trước nhưng chưa đưa vào Plan.</div></div>
+      <div class="pitem"><div class="t">Mức dùng AI coding <span class="new">mới</span></div><div class="d">Có / Một phần / Không, do dev tự khai khi tạo PR — so sánh tỷ lệ Fail/Suggest giữa code AI viết và code tay.</div></div>
+      <div class="pitem"><div class="t">Code review <span class="new">mới</span></div><div class="d">Đã review / chưa, người review — ticket có AI coding mà chưa review là điểm rủi ro cần cảnh báo riêng.</div></div>
+      <div class="pitem"><div class="t">Số lần retest tới khi Pass <span class="new">mới</span></div><div class="d">Đếm từ results_&lt;ID&gt;.json — fix phải retest nhiều lần là tín hiệu chất lượng code (AI hoặc người) kém.</div></div>
+      <div class="pitem"><div class="t">Lý do ngoài kế hoạch (module Plan) <span class="new">mới</span></div><div class="d">Hotfix khẩn / đổi spec giữa tuần / ticket phát sinh — hiện chỉ biết "ngoài Plan", không biết tại sao.</div></div>
+      <div class="pitem"><div class="t">Gate: case Pending/Suggest khi lên Production <span class="new">mới</span></div><div class="d">Cờ đỏ tự động khi PR merge production nhưng case Sheet chưa Done hết — tránh lọt như ticket 1394, 1399 ở trên.</div></div>
+      <div class="pitem"><div class="t">Lead time Test Pass → Production <span class="new">mới</span></div><div class="d">Từ lúc case cuối chuyển Done tới lúc PR merge production — đo tốc độ release sau khi AI testing xong.</div></div>
+    </div>
+  </div>
+
+  <footer>Mockup giao diện để duyệt — số liệu minh hoạ dựa theo hình dạng dữ liệu tuần 47 thật, chưa phải số live.</footer>
+</main>
+
+<script>
+(function(){
+  var tc=[
+    {wk:'T44',p:98,s:12,f:6,pe:4},
+    {wk:'T45',p:110,s:15,f:9,pe:5},
+    {wk:'T46',p:120,s:18,f:11,pe:7},
+    {wk:'T47',p:142,s:21,f:14,pe:9}
+  ];
+  var max=0;
+  tc.forEach(function(d){var t=d.p+d.s+d.f+d.pe; if(t>max)max=t;});
+  var el=document.getElementById('trendTC');
+  var tcDetail=document.getElementById('trendTCDetail');
+  var tcGrps=[];
+  tc.forEach(function(d){
+    var total=d.p+d.s+d.f+d.pe;
+    var h=92*(total/max);
+    var grp=document.createElement('div'); grp.className='bar-grp';
+    var stack=document.createElement('div'); stack.className='stack'; stack.style.height=h+'px';
+    [['var(--text-3)',d.pe],['var(--bad-line)',d.f],['var(--warn-line)',d.s],['var(--ok-line)',d.p]].forEach(function(pair){
+      var seg=document.createElement('div'); seg.className='seg-b'; seg.style.background=pair[0]; seg.style.height=(h*(pair[1]/total))+'px';
+      stack.appendChild(seg);
+    });
+    grp.appendChild(stack);
+    var num=document.createElement('div'); num.className='num'; num.textContent=total; grp.appendChild(num);
+    var wk=document.createElement('div'); wk.className='wk'; wk.textContent=d.wk; grp.appendChild(wk);
+    grp.addEventListener('click',function(){
+      tcGrps.forEach(function(g){g.classList.remove('sel')});
+      grp.classList.add('sel');
+      tcDetail.innerHTML='Tuần '+d.wk+': <b>'+total+'</b> case — Pass <b>'+d.p+'</b> · Suggest <b>'+d.s+'</b> · Fail <b>'+d.f+'</b> · Pending <b>'+d.pe+'</b>';
+    });
+    tcGrps.push(grp);
+    el.appendChild(grp);
+  });
+  if(tcGrps.length){tcGrps[tcGrps.length-1].click();}
+
+  var pr=[{wk:'T44',i:6,o:1},{wk:'T45',i:7,o:0},{wk:'T46',i:8,o:2},{wk:'T47',i:6,o:3}];
+  var max2=0; pr.forEach(function(d){var t=d.i+d.o; if(t>max2)max2=t;});
+  var el2=document.getElementById('trendPR');
+  var prDetail=document.getElementById('trendPRDetail');
+  var prGrps=[];
+  pr.forEach(function(d){
+    var total=d.i+d.o;
+    var h=92*(total/max2);
+    var grp=document.createElement('div'); grp.className='bar-grp';
+    var stack=document.createElement('div'); stack.className='stack'; stack.style.height=h+'px';
+    [['var(--warn-line)',d.o],['var(--info-line)',d.i]].forEach(function(pair){
+      var seg=document.createElement('div'); seg.className='seg-b'; seg.style.background=pair[0]; seg.style.height=(h*(pair[1]/total))+'px';
+      stack.appendChild(seg);
+    });
+    grp.appendChild(stack);
+    var num=document.createElement('div'); num.className='num'; num.textContent=total; grp.appendChild(num);
+    var wk=document.createElement('div'); wk.className='wk'; wk.textContent=d.wk; grp.appendChild(wk);
+    grp.addEventListener('click',function(){
+      prGrps.forEach(function(g){g.classList.remove('sel')});
+      grp.classList.add('sel');
+      prDetail.innerHTML='Tuần '+d.wk+': <b>'+total+'</b> ticket mới — Trong module Plan <b>'+d.i+'</b> · Ngoài kế hoạch <b>'+d.o+'</b>';
+    });
+    prGrps.push(grp);
+    el2.appendChild(grp);
+  });
+  if(prGrps.length){prGrps[prGrps.length-1].click();}
+
+  var seg=document.querySelectorAll('.seg button');
+  seg.forEach(function(b){b.addEventListener('click',function(){seg.forEach(function(x){x.classList.remove('on')});b.classList.add('on')})});
+
+  var weekView=document.getElementById('weekView');
+  var monthView=document.getElementById('monthView');
+  var weekSel=document.getElementById('weekSel');
+  weekSel.addEventListener('change',function(e){renderWeekKpi(Number(e.target.value))});
+  setTimeout(function(){renderWeekKpi(Number(weekSel.value)||47)},0); // gọi sau khi WEEKS/WEEK_ORDER (khai báo phía dưới) đã có giá trị
+  document.getElementById('viewWeek').addEventListener('click',function(){
+    weekView.hidden=false; monthView.hidden=true; weekSel.hidden=false;
+  });
+  document.getElementById('viewMonth').addEventListener('click',function(){
+    weekView.hidden=true; monthView.hidden=false; weekSel.hidden=true;
+  });
+
+  var WEEKS={
+    44:{label:'T44',full:'Tuần 44 · 19/10–25/10', ticketThucHien:12, log:{inp:6,out:1}, pr:{ai:3,qc:1,no:3}, ai:{tested:8,total:12}, tc:{p:98,s:12,f:6,pe:4}, flag:1, bu:{bug:4,upd:3}, src:{qc:28,sales:22,cs:14,kh:36}, outList:'—'},
+    45:{label:'T45',full:'Tuần 45 · 26/10–01/11', ticketThucHien:13, log:{inp:7,out:0}, pr:{ai:4,qc:1,no:3}, ai:{tested:8,total:13}, tc:{p:110,s:15,f:9,pe:5}, flag:1, bu:{bug:4,upd:3}, src:{qc:29,sales:21,cs:13,kh:37}, outList:'—'},
+    46:{label:'T46',full:'Tuần 46 · 09/11–15/11', ticketThucHien:13, log:{inp:8,out:2}, pr:{ai:4,qc:1,no:4}, ai:{tested:9,total:13}, tc:{p:120,s:18,f:11,pe:7}, flag:2, bu:{bug:5,upd:5}, src:{qc:31,sales:19,cs:13,kh:37}, outList:'—'},
+    47:{label:'T47',full:'Tuần 47 · 16/11–22/11', ticketThucHien:13, log:{inp:6,out:3}, pr:{ai:4,qc:1,no:4}, ai:{tested:9,total:13}, tc:{p:142,s:21,f:14,pe:9}, flag:2, bu:{bug:5,upd:4}, src:{qc:36,sales:14,cs:10,kh:40}, outList:'1403, CHUA-RO-MA-1, KH01'}
+  };
+  var WEEK_ORDER=[44,45,46,47];
+  function renderWeekKpi(wk){
+    var w=WEEKS[wk];
+    var idx=WEEK_ORDER.indexOf(wk);
+    var prev=idx>0?WEEKS[WEEK_ORDER[idx-1]]:null;
+    var logTotal=w.log.inp+w.log.out, prTotal=w.pr.ai+w.pr.qc+w.pr.no;
+    var prevLogTotal=prev?prev.log.inp+prev.log.out:null, prevPrTotal=prev?prev.pr.ai+prev.pr.qc+prev.pr.no:null;
+    var tcTotal=w.tc.p+w.tc.s+w.tc.f+w.tc.pe;
+    document.getElementById('wTicketThucHienVal').textContent=w.ticketThucHien;
+    document.getElementById('wTicketThucHienSub').innerHTML='Nguồn: module Plan — danh sách QC tick chạy test '+w.full.split(' · ')[0].toLowerCase()+fmtDelta(w.ticketThucHien,prev?prev.ticketThucHien:null);
+    document.getElementById('wNewTicketVal').textContent=logTotal;
+    document.getElementById('wNewTicketSub').innerHTML='Tạo mới trong tuần'+fmtDelta(logTotal,prevLogTotal)+', chưa tính ticket tồn từ tuần trước';
+    document.getElementById('wPrVal').innerHTML=prTotal+' <small>/ 24 PR tuần</small>';
+    document.getElementById('wPrSub').innerHTML=w.pr.ai+' AI test · '+w.pr.qc+' QC test tay (nhãn Book QC) · '+w.pr.no+' chưa test'+fmtDelta(prTotal,prevPrTotal);
+    document.getElementById('wOutVal').innerHTML=w.log.out+' <small>/ '+prTotal+' PR</small>';
+    document.getElementById('wOutSub').textContent=(w.outList)+' — không nằm trong danh sách module Plan tuần này';
+    document.getElementById('wAiVal').innerHTML=w.ai.tested+' <small>/ '+w.ai.total+' ticket tuần thực hiện</small>';
+    document.getElementById('wAiSub').textContent=Math.round(100*w.ai.tested/w.ai.total)+'% — '+(w.ai.total-w.ai.tested)+' ticket chưa chạy test';
+    document.getElementById('wTcVal').textContent=tcTotal;
+    document.getElementById('wTcSub').innerHTML='<span style="color:var(--ok)">'+w.tc.p+' Pass</span> · <span style="color:var(--warn)">'+w.tc.s+' Suggest</span> · <span style="color:var(--bad)">'+w.tc.f+' Fail</span> · <span style="color:var(--text-2)">'+w.tc.pe+' Pending</span>'+fmtDelta(tcTotal,prev?prev.tc.p+prev.tc.s+prev.tc.f+prev.tc.pe:null);
+    document.getElementById('wFlagVal').textContent=w.flag;
+  }
+
+  var MONTHS={
+    T9:{label:'T9',full:'Tháng 9', ticketThucHien:48, log:{inp:22,out:4}, pr:{ai:13,qc:3,no:14}, ai:{tested:28,total:48}, tc:{p:410,s:55,f:30,pe:20}, flag:5, bu:{bug:14,upd:12}, src:{qc:30,sales:20,cs:15,kh:35}},
+    T10:{label:'T10',full:'Tháng 10', ticketThucHien:46, log:{inp:24,out:5}, pr:{ai:14,qc:3,no:15}, ai:{tested:30,total:46}, tc:{p:440,s:60,f:35,pe:22}, flag:5, bu:{bug:15,upd:14}, src:{qc:31,sales:19,cs:13,kh:37}},
+    T11:{label:'T11',full:'Tháng 11', ticketThucHien:54, log:{inp:27,out:6}, pr:{ai:16,qc:4,no:17}, ai:{tested:34,total:54}, tc:{p:470,s:66,f:40,pe:25}, flag:6, bu:{bug:18,upd:15}, src:{qc:33,sales:18,cs:12,kh:37}}
+  };
+  var MONTH_ORDER=['T9','T10','T11'];
+  function fmtDelta(cur,prev){
+    if(prev==null)return '';
+    var d=cur-prev;
+    if(d===0)return ' · bằng T trước';
+    return d>0? ' · ↑ so tháng trước (+'+d+')' : ' · ↓ so tháng trước ('+d+')';
+  }
+  function renderMonthKpi(key){
+    var m=MONTHS[key];
+    var idx=MONTH_ORDER.indexOf(key);
+    var prev=idx>0?MONTHS[MONTH_ORDER[idx-1]]:null;
+    var logTotal=m.log.inp+m.log.out, prTotal=m.pr.ai+m.pr.qc+m.pr.no;
+    var prevLogTotal=prev?prev.log.inp+prev.log.out:null, prevPrTotal=prev?prev.pr.ai+prev.pr.qc+prev.pr.no:null;
+    var tcTotal=m.tc.p+m.tc.s+m.tc.f+m.tc.pe;
+    document.getElementById('mKpiA').innerHTML=
+      '<div class="kpi"><div class="lbl">Ticket tuần thực hiện</div><div class="val">'+m.ticketThucHien+'</div><div class="sub">Cộng dồn module Plan cả tháng'+fmtDelta(m.ticketThucHien,prev?prev.ticketThucHien:null)+'</div></div>'+
+      '<div class="kpi"><div class="lbl">Ticket mới log lên quy trình</div><div class="val">'+logTotal+'</div><div class="sub">'+m.log.inp+' trong module Plan · '+m.log.out+' ngoài kế hoạch'+fmtDelta(logTotal,prevLogTotal)+'</div></div>'+
+      '<div class="kpi"><div class="lbl">PR lên Production</div><div class="val">'+prTotal+'</div><div class="sub">'+m.pr.ai+' AI test · '+m.pr.qc+' QC test tay · '+m.pr.no+' chưa test'+fmtDelta(prTotal,prevPrTotal)+'</div></div>'+
+      '<div class="kpi"><div class="lbl"><span class="dot" style="background:var(--warn-line)"></span>Ngoài kế hoạch (module Plan)</div><div class="val">'+m.log.out+' <small>/ '+logTotal+' ticket mới</small></div><div class="sub">'+Math.round(100*m.log.out/logTotal)+'% ticket mới log nằm ngoài kế hoạch</div></div>';
+    document.getElementById('mKpiB').innerHTML=
+      '<div class="kpi"><div class="lbl">Ticket được AI Testing</div><div class="val">'+m.ai.tested+' <small>/ '+m.ai.total+' ticket</small></div><div class="sub">'+Math.round(100*m.ai.tested/m.ai.total)+'% trung bình cả tháng</div></div>'+
+      '<div class="kpi"><div class="lbl">Testcase đã chạy</div><div class="val">'+tcTotal+'</div><div class="sub"><span style="color:var(--ok)">'+m.tc.p+' Pass</span> · <span style="color:var(--warn)">'+m.tc.s+' Suggest</span> · <span style="color:var(--bad)">'+m.tc.f+' Fail</span> · <span style="color:var(--text-2)">'+m.tc.pe+' Pending</span></div></div>'+
+      '<div class="kpi flag"><div class="lbl">⚠ Lên Production chưa test xong</div><div class="val">'+m.flag+'</div><div class="sub">Cộng dồn cả tháng — cần rà lại'+fmtDelta(m.flag,prev?prev.flag:null)+'</div></div>';
+    var buTotal=m.bu.bug+m.bu.upd, buBugPct=Math.round(100*m.bu.bug/buTotal);
+    document.getElementById('mKpiC').innerHTML=
+      '<div class="card"><h3>Bug vs Update — ticket mới log cả tháng</h3><div class="hbar"><div style="width:'+buBugPct+'%;background:var(--bad-line)"></div><div style="width:'+(100-buBugPct)+'%;background:var(--info-line)"></div></div><div class="hbarlbl"><span>'+m.bu.bug+' Bug ('+buBugPct+'%)</span><span>'+m.bu.upd+' Update ('+(100-buBugPct)+'%)</span></div></div>'+
+      '<div class="card"><h3>Nguồn ticket — cả tháng</h3><div class="hbar"><div style="width:'+m.src.qc+'%;background:var(--bad-line)"></div><div style="width:'+m.src.sales+'%;background:var(--warn-line)"></div><div style="width:'+m.src.cs+'%;background:var(--info-line)"></div><div style="width:'+m.src.kh+'%;background:var(--ok-line)"></div></div><div class="hbarlbl"><span>QC '+m.src.qc+'%</span><span>Sales '+m.src.sales+'%</span><span>CS '+m.src.cs+'%</span><span>Khách hàng '+m.src.kh+'%</span></div></div>';
+  }
+  document.getElementById('monthSel').addEventListener('change',function(e){renderMonthKpi(e.target.value)});
+  renderMonthKpi('T11');
+
+  function buildStackChart(elId,detailId,items,segs,fmtFn){
+    var el=document.getElementById(elId), detail=document.getElementById(detailId);
+    var max=0; items.forEach(function(d){var t=segs.reduce(function(a,s){return a+d[s.key]},0); if(t>max)max=t;});
+    var grps=[];
+    items.forEach(function(d){
+      var total=segs.reduce(function(a,s){return a+d[s.key]},0);
+      var h=92*(total/max);
+      var grp=document.createElement('div'); grp.className='bar-grp';
+      var stack=document.createElement('div'); stack.className='stack'; stack.style.height=h+'px';
+      segs.slice().reverse().forEach(function(s){
+        var seg=document.createElement('div'); seg.className='seg-b'; seg.style.background=s.color; seg.style.height=(h*(d[s.key]/total))+'px';
+        stack.appendChild(seg);
+      });
+      grp.appendChild(stack);
+      var num=document.createElement('div'); num.className='num'; num.textContent=total; grp.appendChild(num);
+      var wk=document.createElement('div'); wk.className='wk'; wk.textContent=d.label; grp.appendChild(wk);
+      grp.addEventListener('click',function(){
+        grps.forEach(function(g){g.classList.remove('sel')});
+        grp.classList.add('sel');
+        detail.innerHTML=fmtFn(d,total);
+      });
+      grps.push(grp);
+      el.appendChild(grp);
+    });
+    if(grps.length)grps[grps.length-1].click();
+  }
+
+  buildStackChart('trendMonthTC','trendMonthTCDetail',MONTH_ORDER.map(function(k){var m=MONTHS[k].tc;return {label:MONTHS[k].full,p:m.p,s:m.s,f:m.f,pe:m.pe}}),
+    [{key:'p',color:'var(--ok-line)'},{key:'s',color:'var(--warn-line)'},{key:'f',color:'var(--bad-line)'},{key:'pe',color:'var(--text-3)'}],
+    function(d,total){return d.label+': <b>'+total+'</b> case — Pass <b>'+d.p+'</b> · Suggest <b>'+d.s+'</b> · Fail <b>'+d.f+'</b> · Pending <b>'+d.pe+'</b>'});
+
+  buildStackChart('trendMonthPR','trendMonthPRDetail',MONTH_ORDER.map(function(k){var m=MONTHS[k].pr;return {label:MONTHS[k].full,ai:m.ai,qc:m.qc,no:m.no}}),
+    [{key:'ai',color:'var(--ok-line)'},{key:'qc',color:'var(--info-line)'},{key:'no',color:'var(--text-3)'}],
+    function(d,total){return d.label+': <b>'+total+'</b> PR production — AI test <b>'+d.ai+'</b> · QC test tay <b>'+d.qc+'</b> · Chưa test <b>'+d.no+'</b>'});
+
+  (function(){
+    var secs=600;
+    var atEl=document.getElementById('refreshAt');
+    var cdEl=document.getElementById('refreshCd');
+    function stamp(){
+      var now=new Date();
+      var hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0');
+      atEl.textContent=hh+':'+mm;
+    }
+    function tick(){
+      var m=String(Math.floor(secs/60)).padStart(2,'0'), s=String(secs%60).padStart(2,'0');
+      cdEl.textContent=m+':'+s;
+      secs--;
+      if(secs<0){secs=600; stamp();}
+    }
+    stamp(); tick();
+    setInterval(tick,1000);
+  })();
+
+  var lblPhamVi=document.getElementById('lblPhamVi');
+  if(lblPhamVi){
+    lblPhamVi.addEventListener('click',function(){
+      ['grpPrTest','grpNewTicket','grpThucHien'].forEach(function(id,i){
+        var elx=document.getElementById(id);
+        if(!elx)return;
+        elx.classList.remove('flash'); void elx.offsetWidth;
+        elx.classList.add('flash');
+        if(i===0)elx.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+    });
+  }
+
+  function wireExpand(btnId,panelId){
+    var btn=document.getElementById(btnId);
+    var p=document.getElementById(panelId);
+    if(btn&&p){
+      btn.addEventListener('click',function(){
+        p.open=true;
+        btn.setAttribute('aria-expanded','true');
+        p.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+    }
+  }
+  wireExpand('kpiNewTicket','newTicketPanel');
+  wireExpand('kpiPrProd','prTestPanel');
+})();
+</script>
+
+<script type="application/json" id="aiScoreData">{}</script>
+<script id="aiScoreJs">
+(function(){
+  let D={};try{D=JSON.parse(document.getElementById('aiScoreData').textContent||'{}')}catch(e){}
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function card(sc,extra){
+    if(!sc)return null;
+    if(sc.total==null)return '<p style="color:var(--text-2)">'+esc(sc.note||'Chưa đo được')+'</p>';
+    const rows=(sc.criteria||[]).map(c=>{const p=c.points==null?null:c.points;const w=p==null?0:Math.max(0,Math.min(100,p/c.max*100));
+      return '<div class="crit"><span title="'+esc(c.how)+'">'+esc(c.name)+'</span><span class="bar"><i style="width:'+w+'%"></i></span><span class="pts">'+(p==null?'—':p)+' / '+c.max+'</span><small>'+esc(c.detail||'')+'</small></div>';}).join('');
+    const rub='<details class="rubric"><summary>Cách chấm (thang 100 · A ≥ 85 · B ≥ 70 · C ≥ 50 · D &lt; 50)</summary><ul>'+(sc.criteria||[]).map(c=>'<li><b>'+esc(c.name)+' ('+c.max+'đ)</b>: '+esc(c.how)+'</li>').join('')+'</ul>Tiêu chí chưa đo được (thiếu dữ liệu) không tính vào mẫu số, điểm được quy đổi lại về thang 100.</details>';
+    return '<div class="score-card"><div class="score-big"><b>'+sc.total+'</b><span class="gr '+esc(sc.grade)+'">Hạng '+esc(sc.grade)+'</span></div><div>'+rows+(extra||'')+rub+'</div></div>';
+  }
+  const w=card(D.week);if(w){document.getElementById('scoreWeek').innerHTML=w;document.getElementById('scoreWeekCnt').textContent='tuần '+(D.weekNo||'?')+(D.at?' · tính lúc '+new Date(D.at).toLocaleString('vi-VN'):'');}
+  const ex=D.weeks?'<div class="score-weeks">'+D.weeks.map(x=>'<span>Tuần '+esc(x.week)+': <b>'+(x.score==null?'—':x.score)+'</b> '+esc(x.grade||'')+'</span>').join('')+'</div>':'';
+  const m=card(D.month,ex);if(m){document.getElementById('scoreMonth').innerHTML=m;document.getElementById('scoreMonthCnt').textContent=(D.weeks||[]).length+' tuần';}
+})();
+</script>

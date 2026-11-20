@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pipeline ticket tuần</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{--surface-1:#f5f4ef;--surface-2:#ffffff;--surface-0:#eeede8;--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;
+--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.22);--radius:8px;
+--bg-accent:#e6f1fb;--text-accent:#185fa5;--border-accent:#378add;--bg-success:#eaf3de;--text-success:#3b6d11;--border-success:#639922;
+--bg-warning:#faeeda;--text-warning:#854f0b;--border-warning:#ba7517;--bg-danger:#fcebeb;--text-danger:#a32d2d;--border-danger:#e24b4a;
+--font-mono:ui-monospace,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--surface-1:#1f1f1e;--surface-2:#161615;--surface-0:#000000;--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#8a8982;
+--border:rgba(255,255,255,.14);--border-strong:rgba(255,255,255,.26);--bg-accent:#0c447c;--text-accent:#b5d4f4;--border-accent:#5aa2ee;--bg-success:#27500a;--text-success:#c0dd97;--border-success:#97c459;
+--bg-warning:#633806;--text-warning:#fac775;--border-warning:#ef9f27;--bg-danger:#791f1f;--text-danger:#f7c1c1;--border-danger:#f09595}}
+:root[data-theme="dark"]{--surface-1:#1f1f1e;--surface-2:#161615;--surface-0:#000000;--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#8a8982;
+--border:rgba(255,255,255,.14);--border-strong:rgba(255,255,255,.26);--bg-accent:#0c447c;--text-accent:#b5d4f4;--border-accent:#5aa2ee;--bg-success:#27500a;--text-success:#c0dd97;--border-success:#97c459;
+--bg-warning:#633806;--text-warning:#fac775;--border-warning:#ef9f27;--bg-danger:#791f1f;--text-danger:#f7c1c1;--border-danger:#f09595}
+*{box-sizing:border-box}body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:system-ui,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px}
+button,input,select{font:inherit;color:var(--text-primary)}
+button{background:transparent;border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:0 12px;height:32px;cursor:pointer}
+button:hover{background:var(--surface-1)}
+input,select{height:34px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);padding:0 10px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text-primary);color:var(--surface-2);padding:8px 14px;border-radius:8px;font-size:13px;display:none;max-width:90vw}
+</style>
+<script>
+function sendPrompt(text){const t=document.getElementById('toast');
+ const done=()=>{t.textContent='Đã sao chép lệnh — dán vào Claude Code để chạy';t.style.display='block';setTimeout(()=>t.style.display='none',2500)};
+ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(done).catch(()=>{window.prompt('Sao chép lệnh này rồi dán vào Claude Code:',text)});}
+</script>
+</head><body><main>
+<h2 class="sr-only">Pipeline ticket tuần: tick hoặc x ticket ở bước 1 cập nhật ngay các bước sau; 1a phân nhóm và 1b kế hoạch chạy tự động không cần duyệt.</h2>
+<style>
+.card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5}
+.hd{display:flex;align-items:center;gap:8px}
+.ic{width:26px;height:26px;border-radius:8px;background:var(--surface-1);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text-secondary);flex:none}
+.nm{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--text-primary)}
+.sb{font-size:11px;color:var(--text-muted)}
+.st{margin-left:auto;font-size:11px;white-space:nowrap}
+.bt{width:24px;height:24px;padding:0;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:6px;background:var(--surface-1);color:var(--text-secondary);margin:2px 3px 0 0}
+.auto,.ro{font-size:11px;padding:1px 7px;border-radius:6px;background:var(--bg-accent);color:var(--text-accent)}
+.qcb,.rw{font-size:11px;padding:1px 7px;border-radius:6px;background:var(--bg-warning);color:var(--text-warning)}
+.okb{font-size:11px;padding:1px 7px;border-radius:6px;background:var(--bg-success);color:var(--text-success)}
+.nob{font-size:11px;padding:1px 7px;border-radius:6px;background:var(--bg-danger);color:var(--text-danger)}
+.gate{font-size:11px;color:var(--text-warning);margin-top:6px}
+.ln{width:0;height:14px;border-left:1px solid var(--border-strong);margin:0 auto}
+.lb{font-size:11px;color:var(--text-secondary);margin-bottom:3px;display:block}
+.er{font-size:11px;color:var(--text-danger)}
+.bar{height:6px;border-radius:3px;background:var(--surface-1);display:flex;overflow:hidden;margin:6px 0}
+.row{display:grid;grid-template-columns:18px 34px 58px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 0;border-top:0.5px solid var(--border);font-size:12px}
+.row.on{background:var(--surface-1)}
+.trow{display:grid;grid-template-columns:44px minmax(0,1fr) 170px 40px 62px;gap:8px;align-items:center;padding:7px 0;border-top:0.5px solid var(--border);font-size:12px}
+.ok{border-color:var(--border-success)}.no{border-color:var(--border-danger)}
+.p{color:var(--text-success)}.f{color:var(--text-danger)}.w{color:var(--text-warning)}.m{color:var(--text-muted)}
+.sec{display:flex;align-items:center;gap:8px;margin:16px 0 8px;font-size:13px;font-weight:500}
+.qbtn{font-size:12px;height:28px;color:var(--text-warning);border-color:var(--border-warning)}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:12px;display:flex;flex-direction:column;gap:4px}
+.tile:hover{border-color:var(--border-strong)}
+.tile.sel{border:2px solid var(--border-accent);padding:9px 11px}
+.tile:focus-visible{outline:2px solid var(--border-accent)}
+.yn{all:unset;cursor:pointer;width:26px;height:26px;border-radius:6px;border:0.5px solid var(--border-strong);display:inline-flex;align-items:center;justify-content:center;font-size:15px;color:var(--text-muted)}
+.yn.y.on{background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)}
+.yn.n.on{background:var(--bg-danger);color:var(--text-danger);border-color:var(--border-danger)}
+.yn:focus-visible{outline:2px solid var(--border-accent)}
+.rtb{font-size:11px;height:24px;padding:0 8px;white-space:nowrap}
+.ov{background:rgba(0,0,0,0.45);border-radius:12px;padding:20px 14px;margin-top:8px}
+.dlg{background:var(--surface-2);border-radius:12px;border:0.5px solid var(--border);padding:14px 16px;margin:0 auto;font-size:12px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.g2 input,.g2 select{width:100%}
+code{font-family:var(--font-mono);font-size:11px;background:var(--surface-1);padding:1px 5px;border-radius:4px}
+a{color:var(--text-accent);text-decoration:none}
+.prc{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;font-size:11px;padding:1px 7px;border-radius:6px;max-width:100%;line-height:1.4}
+.prc.ok{background:var(--bg-success);color:var(--text-success)}.prc.op{background:var(--bg-accent);color:var(--text-accent)}.prc.cl{background:var(--bg-warning);color:var(--text-warning)}.prc.no{background:var(--surface-1);color:var(--text-muted)}
+.kh{font-size:11px;padding:1px 7px;border-radius:6px;background:var(--surface-1);color:var(--text-secondary);white-space:nowrap}
+.kh.done{background:var(--bg-success);color:var(--text-success)}.kh.doing{background:var(--bg-accent);color:var(--text-accent)}.kh.cancel{background:var(--bg-danger);color:var(--text-danger)}.kh.todo{background:var(--bg-warning);color:var(--text-warning)}
+#notibar{display:none;margin-bottom:10px;padding:8px 12px;border-radius:10px;border:1px solid var(--border-warning);background:var(--bg-warning);color:var(--text-warning);font-size:12px}
+#notibar.show{display:block}#notibar ul{margin:4px 0 0;padding-left:18px}
+.lrow{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:0.5px solid var(--border)}
+.lrow:first-of-type{border-top:none}
+.lin{min-width:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.gbox{display:flex;gap:4px;align-items:center}
+.gst{font-size:11px;margin-right:2px;white-space:nowrap}
+.gb.on.y{background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)}
+.gb.on.x{background:var(--bg-danger);color:var(--text-danger);border-color:var(--border-danger)}
+.brn{font-family:var(--font-mono);font-size:11px;background:var(--surface-1);padding:1px 6px;border-radius:4px;word-break:break-all}
+.scb{font-size:11px;height:24px;padding:0 8px;color:var(--text-accent);border-color:var(--border-accent)}
+.mdv{max-height:62vh;overflow:auto;padding-right:6px;font-size:12.5px;line-height:1.55}
+.mdv h3,.mdv h4,.mdv h5,.mdv h6{margin:12px 0 4px;font-size:13px}.mdv h3{font-size:14px}
+.mdv p{margin:4px 0}.mdv ul{margin:4px 0;padding-left:18px}
+.mdv pre{background:var(--surface-1);padding:8px;border-radius:6px;overflow:auto;font-size:11px}
+.mdt{overflow:auto;margin:6px 0}.mdt table{border-collapse:collapse;font-size:11.5px;width:100%}
+.mdt th,.mdt td{border:0.5px solid var(--border-strong);padding:4px 6px;text-align:left;vertical-align:top}
+.mdt th{background:var(--surface-1)}
+</style>
+
+<div style="display:flex;align-items:center;gap:10px;padding:.5rem 0;font-size:12px;flex-wrap:wrap">
+  <span style="font-weight:500;font-size:14px">Pipeline ticket tuần</span><span class="sb">KH Tuần 09 · 16/11–22/11</span>
+  <span style="margin-left:auto" class="p" id="cOk"></span><span class="f" id="cNo"></span><span class="m" id="cWait"></span>
+  <button id="reset" style="font-size:12px;height:28px"><i class="ti ti-refresh" aria-hidden="true"></i> Đặt lại</button>
+  <button id="all" style="font-size:12px;height:28px;color:var(--text-success);border-color:var(--border-success)"><i class="ti ti-check" aria-hidden="true"></i> Chấp nhận tất cả</button>
+</div>
+<div id="runbar" role="status" aria-live="polite"></div>
+<div id="notibar" role="status" aria-live="polite"></div>
+<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-secondary);padding:6px 10px;background:var(--surface-1);border-radius:var(--radius);margin-bottom:12px">
+  <span>│ Tuần tự</span><span>Luồng A/B/C song song</span><span class="w"><i class="ti ti-player-pause" aria-hidden="true"></i> Chờ QC duyệt</span><span><span class="auto">Tự động</span> AI tự chạy</span><span><span class="qcb">QC điền</span> theo từng ticket</span>
+</div>
+
+<div style="max-width:500px;margin:0 auto">
+  <button class="tile" id="s1" data-step="1" aria-expanded="false" style="width:100%">
+    <span class="hd"><span class="ic"><i class="ti ti-calendar" aria-hidden="true"></i></span><span style="display:flex;flex-direction:column;min-width:0"><span class="nm">1 · agent-ticket-weekly <span class="qcb">QC duyệt</span></span><span class="sb">Tài khoản + tick ticket chạy test · bấm để mở</span></span><i class="ti ti-chevron-down m" id="s1ch" aria-hidden="true" style="margin-left:auto;font-size:16px"></i></span>
+    <span id="s1sum" style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px"></span>
+    <span id="s1chips"></span>
+  </button>
+</div>
+<div id="p1"></div>
+
+<div style="max-width:500px;margin:0 auto">
+  <div class="ln"></div>
+  <div class="card" data-step="1a"><div class="hd"><div class="ic"><i class="ti ti-search" aria-hidden="true"></i></div><div><div class="nm">1a · agent-analyze <span class="auto">Tự động</span></div><div class="sb">Gom nhóm ticket đã tick</div></div><span class="st p"><i class="ti ti-circle-check" aria-hidden="true"></i> Đã chạy</span></div><div style="margin-top:6px" id="an"></div></div>
+  <div class="ln"></div>
+  <div class="card" data-step="1b"><div class="hd"><div class="ic"><i class="ti ti-list-numbers" aria-hidden="true"></i></div><div><div class="nm">1b · agent-plan <span class="auto">Tự động</span></div><div class="sb">Thứ tự + chia luồng</div></div><span class="st p"><i class="ti ti-circle-check" aria-hidden="true"></i> Đã chạy</span></div><div style="margin-top:6px" id="pl"></div></div>
+  <div class="ln"></div>
+</div>
+
+<div class="sec" data-step="1c" style="margin-top:4px"><i class="ti ti-forms" aria-hidden="true"></i>Bước 1c · Thông tin QC theo từng ticket<span class="qcb">QC điền</span><span class="m" id="fsum" style="font-size:12px;font-weight:400;margin-left:auto"></span></div>
+<div id="tiles" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px"></div>
+<div id="fpop"></div>
+<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><button id="go">Bắt đầu pipeline ↗</button><span class="er" id="e_go" style="font-size:12px"></span></div>
+
+<div class="sec" data-step="2-4"><i class="ti ti-git-branch" aria-hidden="true"></i>Bước 2–4 · Code change, scenario, testcase</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px" id="lanes"></div>
+<div id="scpop"></div>
+
+<div class="sec" data-step="5-6"><i class="ti ti-flask" aria-hidden="true"></i>Bước 5–6 · Chạy test và retest<span class="m" style="font-size:12px;font-weight:400;margin-left:auto" id="tot"></span></div>
+<div id="runs" style="display:flex;flex-direction:column;gap:12px"></div>
+
+<div style="max-width:500px;margin:0 auto">
+  <div class="ln"></div>
+  <div class="card" data-step="7"><div class="hd"><div class="ic"><i class="ti ti-rocket" aria-hidden="true"></i></div><div><div class="nm">7 · agent-release-check</div><div class="sb">Hoàn thành khi 100% pass production · QC ✓ để đóng ticket</div></div></div><div style="margin-top:6px" id="rel"></div></div>
+<div id="rppop" style="margin-top:6px"></div>
+</div>
+
+<div style="margin-top:14px;display:flex;gap:8px"><input id="ask" placeholder="Retest TK1384_022, 074 lần 2 trên Production" style="flex:1"><button id="send">Gửi ↗</button></div>
+<div class="er" id="e_ask" style="margin-top:4px;font-size:12px"></div>
+
+<script>
+const GID=1953309174,SH='https://docs.google.com/spreadsheets/d/<SHEET_ID>/edit';
+const A=[
+ {k:'fd',ic:'building',name:'Fastdo',use:'Bước 1 · quy trình + KH tuần',perm:'ro',permT:'Chỉ đọc',how:'Đăng nhập trên Chrome debug 9222',url:'https://work.fastdo.vn',st:1},
+ {k:'gh',ic:'brand-github',name:'GitHub',use:'Bước 2 · nhánh, PR, code',perm:'ro',permT:'Chỉ đọc',how:'Chạy trong terminal:',cmd:'gh auth login',st:0},
+ {k:'gs',ic:'table',name:'Google Sheet',use:'Bước 4–6 · testcase, kết quả',perm:'rw',permT:'Đọc + ghi',how:'Sheet chia sẻ Editor cho Service Account',st:1}
+];
+const T=[
+ {id:'1384',name:'UPDATE HOA HƯNG',mod:'fCheckin, fProfile',type:'Update',grp:'phép/lương',lane:'B',env:'Localhost',dl:'11/11',y:1,r0:1042,r1:1119,lan:1,real:1,total:78,n:{DONE:63,Fail:3,Suggest:6,Pending:6},
+  f:{sh:SH,tab:'TESTCASE - 2026',web:'https://xxxx-3000.asse.devtunnels.ms',app:'LDPlayer',org:'Water Quality - NH3T TEAM',qcn:'Giang'},
+  qc:[['022','Fail','App: cờ không áp dụng phép năm','App vẫn hiện câu cũ của chức danh'],['074','Fail','Bấm Cập nhật nhiều lần khi tạo QĐ','Tạo trùng QD00011 ×3'],['076','Fail','Bổ nhiệm tương lai không nhập ngày hết hạn','Job đánh Hết hiệu lực trước ngày hiệu lực'],['021','Pending','Đơn phép tạo trước khi NV bị loại','Cần đăng nhập tài khoản NV A'],['028','Pending','Câu chặn đơn cho NV loại theo chức danh','Cần NV giữ chức danh Trưởng phòng'],['077','Suggest','Tới ngày Bổ nhiệm có hiệu lực','Bảng lương không đổi theo QĐ']]},
+ {id:'1373',name:'Không phạt khi có đơn từ',mod:'fCheckin',type:'Bug',grp:'tính công/phạt',lane:'A',env:'Production',dl:'18/11',y:1,r0:978,r1:983,lan:2,total:6,n:{DONE:5,Fail:1},
+  f:{sh:SH,tab:'TESTCASE - 2026',web:'https://work.fastdo.vn',app:'LDPlayer',org:'TEAM 1ST',qcn:'Giang'},qc:[['004','Fail','Phạt vẫn tính khi đơn duyệt sau giờ chốt','Chờ dev fix, retest lần 3']]},
+ {id:'1370',name:'OT theo phòng ban',mod:'fCheckin',type:'Bug',grp:'tính công/phạt',lane:'A',env:'Beta',dl:'18/11',y:1,r0:1001,r1:1027,lan:2,total:27,n:{DONE:20,Fail:3,Suggest:2},
+  f:{sh:'',tab:'',web:'https://dev1.fastdo.vn',app:'LDPlayer',org:'',qcn:''},qc:[['023','Fail','PB vẫn hiện ở nhóm khác','Retest sau fix'],['027','Fail','Web ≠ App ngày lễ','App 0.3 vs Web 0.45']]},
+ {id:'1376',name:'Hệ số theo phòng ban',mod:'fPayroll',type:'Update',grp:'hệ số phòng ban',lane:'C',env:'Beta',dl:'20/11',y:0,r0:0,r1:0,lan:1,total:12,n:{},f:{sh:'',tab:'',web:'',app:'Không test App',org:'',qcn:''},qc:[]},
+ {id:'1364',name:'Báo cáo chấm công tháng',mod:'fCheckin',type:'Update',grp:'báo cáo',lane:'C',env:'Beta',dl:'21/11',y:0,r0:0,r1:0,lan:1,total:0,n:{},f:{sh:'',tab:'',web:'',app:'LDPlayer',org:'',qcn:''},qc:[]},
+ {id:'1369',name:'(chưa có mô tả)',mod:'—',type:'—',grp:'',lane:'',env:'—',dl:'22/11',y:0,warn:'Thiếu mô tả trên quy trình, cần hỏi PO',total:0,n:{},f:{},qc:[]}
+];
+const REQ={sh:'Dán link Sheet',tab:'Nhập tên tab',web:'Nhập URL Web',org:'Nhập tổ chức',qcn:'Chọn QC'};
+const C={DONE:'var(--text-success)',Suggest:'var(--text-warning)',Fail:'var(--text-danger)',Pending:'var(--text-muted)'};
+const AP=()=>T.filter(t=>t.y);
+const sidOf=f=>{const m=(f.sh||'').match(/\/d\/([A-Za-z0-9_-]{20,})/);return m?m[1]:''};
+const link=(t,a,b)=>`https://docs.google.com/spreadsheets/d/${sidOf(t.f)}/edit#gid=${GID}&range=A${a}:W${b||a}`;
+const isLocal=v=>/^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/i.test(String(v||'').trim());
+const webOK=v=>/^https?:\/\//.test(v)||isLocal(v);
+const normWeb=v=>{v=String(v||'').trim();if(isLocal(v)&&!/^https?:\/\//.test(v))v='http://'+v;if(/^http:\/\/(localhost|127\.0\.0\.1)\/?$/i.test(v))v=v.replace(/\/?$/,':3000');return v;};
+const LOCAL_HINT='Localhost: AI fetch PR + checkout nhánh ticket trong fastdo-server, rồi chạy <code>dotnet run --project FastdoServer.Blazor --urls http://localhost:3000</code>. Không tự bỏ thay đổi chưa commit.';
+const check=f=>{const e={};for(const k in REQ){const v=(f[k]||'').trim();if(!v)e[k]=REQ[k];else if(k==='sh'&&!sidOf(f))e[k]='Link chưa đúng dạng docs.google.com/spreadsheets/d/…';else if(k==='web'&&!webOK(v))e[k]='Nhập URL http(s)://… hoặc localhost (VD http://localhost:3000)';}return e;};
+const SEL={};const selOf=id=>SEL[id]||(SEL[id]=new Set());
+const CLI_PATH='__CLI__';
+const qa=a=>/[\s"]/.test(a)?'"'+String(a).replace(/"/g,'\\"')+'"':a;
+function persist(args,msg){if(window.PIPE&&PIPE.cli){PIPE.cli(args);return true;}sendPrompt(msg||('Chạy lệnh: node "'+CLI_PATH+'" '+args.map(qa).join(' ')+' --no-copy'));return false;}
+const GATES=['2','3','4','6','7'];
+const MODE_STEPS={'1':['2','3'],'2':['2','4'],'3':['2','5','6'],'4':['2','3','4','5','6']};
+const modeOf=t=>String((t.f&&t.f.mode)||'4');
+const inMode=(t,x)=>x==='7'||MODE_STEPS[modeOf(t)].includes(String(x))||(x==='6'&&MODE_STEPS[modeOf(t)].includes('5'));
+const MODE_LABEL=t=>{const bug=/bug/i.test(t.type||'');return {'1':bug?'[1] Phân tích Fix (đọc code, chưa chạy)':'[1] Phân tích + sinh Test Scenario (dừng chờ QC review)','2':bug?'[2] Sinh testcase retest + regression vào Sheet (dừng chờ QC review)':'[2] Sinh Test Case vào Sheet (dừng chờ QC review)','3':bug?'[3] Chạy retest tự động + ghi Sheet vào TEST LẦN N':'[3] Chạy test tự động + ghi Sheet','4':'[4] Làm tuần tự 1→2→3, dừng chờ QC xác nhận sau bước 1 và 2'};};
+const GV=(t,x)=>(t.g&&t.g[x])||'';
+const GNAME={'2':'Nhánh / code change','3':'Test Scenario','4':'Testcase','6':'Kết quả test','7':'Hoàn thành ticket'};
+function gateSay(t,x,v){if(v==='reset')return'';const m=modeOf(t);
+ if(v==='no')return `[Pipeline] TK${t.id}: QC ✕ TỪ CHỐI bước ${x} (${GNAME[x]}) — đã lưu cổng ${x}=✕. Dừng lại, hỏi QC lý do rồi sửa lại bước này; sửa xong chạy gate ${t.id} ${x} reset để QC duyệt lại.`;
+ const next={'2':'Tiếp tục bước kế tiếp theo chế độ ['+m+'].','3':MODE_STEPS[m].includes('4')?'Tiếp tục bước 4: sinh testcase vào Sheet theo Scenario đã duyệt, xong dừng chờ QC duyệt cổng 4.':'Chế độ ['+m+'] chỉ tới Scenario — dừng.','4':MODE_STEPS[m].includes('5')?'Tiếp tục bước 5: chạy test lần '+(t.lan||1)+' trên '+t.env+', quay video, ghi Sheet.':'Chế độ ['+m+'] chỉ tới Testcase — dừng.','6':'Kết quả test được QC chấp nhận — cập nhật bước 7.','7':'QC xác nhận HOÀN THÀNH ticket — tổng kết và đóng trên pipeline.'}[x];
+ return `[Pipeline] TK${t.id}: QC ✓ CHẤP NHẬN bước ${x} (${GNAME[x]}) — đã lưu cổng ${x}=✓. ${next}`;}
+function setGate(id,x,v){const t=T.find(z=>z.id===id);if(!t)return;t.g=t.g||{};t.g[x]=v==='reset'?'':v;refresh();const say=gateSay(t,x,v);
+ if(window.PIPE&&PIPE.cli)PIPE.cli(['gate',id,x,v],say);else sendPrompt((say?say+' ':'')+`(Ghi cổng: node "${CLI_PATH}" gate ${id} ${x} ${v} --no-copy)`);}
+const gbtn=(t,x)=>{const v=GV(t,x);return `<span class="gst ${v==='ok'?'p':v==='no'?'f':'m'}">${v==='ok'?'Chấp nhận':v==='no'?'Từ chối':'Chờ duyệt'}</span><button class="bt y gb${v==='ok'?' on':''}" data-t="${t.id}" data-x="${x}" data-v="${v==='ok'?'reset':'ok'}" aria-pressed="${v==='ok'}" aria-label="Chấp nhận bước ${x} TK${t.id}">✓</button><button class="bt x gb${v==='no'?' on':''}" data-t="${t.id}" data-x="${x}" data-v="${v==='no'?'reset':'no'}" aria-pressed="${v==='no'}" aria-label="Từ chối bước ${x} TK${t.id}">✕</button>`;};
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.gb');if(b){e.stopPropagation();setGate(b.dataset.t,b.dataset.x,b.dataset.v);}});
+const escH=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function md(src){const inl=s=>escH(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+ const L=String(src||'').replace(/\r/g,'').split('\n');let o='',i=0;
+ while(i<L.length){const l=L[i];
+  if(/^\s*\|/.test(l)){const rows=[];while(i<L.length&&/^\s*\|/.test(L[i]))rows.push(L[i++]);const cells=r=>r.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim());const body=rows.filter(r=>!/^\s*\|?\s*:?-{2,}/.test(r));o+='<div class="mdt"><table>'+body.map((r,j)=>'<tr>'+cells(r).map(c=>j?'<td>'+inl(c)+'</td>':'<th>'+inl(c)+'</th>').join('')+'</tr>').join('')+'</table></div>';continue;}
+  if(/^```/.test(l)){i++;let c='';while(i<L.length&&!/^```/.test(L[i]))c+=L[i++]+'\n';i++;o+='<pre>'+escH(c)+'</pre>';continue;}
+  const m=l.match(/^(#{1,6})\s+(.*)/);if(m){const n=Math.min(m[1].length+2,6);o+=`<h${n}>${inl(m[2])}</h${n}>`;i++;continue;}
+  if(/^\s*([-*+]|\d+[.)])\s+/.test(l)){o+='<ul>';while(i<L.length&&/^\s*([-*+]|\d+[.)])\s+/.test(L[i])){o+='<li>'+inl(L[i].replace(/^\s*([-*+]|\d+[.)])\s+/,''))+'</li>';i++;}o+='</ul>';continue;}
+  if(/^\s*(---+|\*\*\*+)\s*$/.test(l)){o+='<hr style="border:0;border-top:0.5px solid var(--border)">';i++;continue;}
+  if(l.trim())o+='<p>'+inl(l)+'</p>';i++;}
+ return o;}
+const NOTI=null;
+const khCls=s=>/done|hoàn/i.test(s)?'done':/doing|đang|progress/i.test(s)?'doing':/cancel|huỷ|hủy/i.test(s)?'cancel':/todo|to do|chưa/i.test(s)?'todo':'';
+const khChip=t=>t.plan&&t.plan.st?`<span class="kh ${khCls(t.plan.st)}" title="Trạng thái trên KH Tuần">KH: ${escH(t.plan.st)}</span>`:'<span class="kh" title="Chưa đọc trạng thái KH Tuần">KH: ?</span>';
+function prSum(t){const ps=t.prs||[];const pr=ps.filter(p=>p.base==='production'),bt=ps.filter(p=>/^beta|dev1/.test(p.base));
+ if(pr.some(p=>p.st==='MERGED'))return{c:'ok',ic:'rocket',tx:'Đã merge production',p:pr.find(p=>p.st==='MERGED')};
+ if(pr.some(p=>p.st==='OPEN'))return{c:'op',ic:'git-pull-request',tx:'PR production đang mở',p:pr.find(p=>p.st==='OPEN')};
+ if(bt.some(p=>p.st==='MERGED'))return{c:'op',ic:'flask',tx:'Đã lên beta',p:bt.find(p=>p.st==='MERGED')};
+ if(ps.some(p=>p.st==='OPEN'))return{c:'op',ic:'git-pull-request',tx:'PR → '+ps.find(p=>p.st==='OPEN').base+' đang mở',p:ps.find(p=>p.st==='OPEN')};
+ if(pr.length)return{c:'cl',ic:'git-pull-request-closed',tx:'PR production đã đóng, chưa merge',p:pr[0]};
+ if(ps.length)return{c:'cl',ic:'git-pull-request-closed',tx:'PR → '+ps[0].base+' '+ps[0].st.toLowerCase(),p:ps[0]};
+ return{c:'no',ic:'git-branch',tx:'Chưa có PR',p:null};}
+const prChip=t=>{const r=prSum(t);const all=(t.prs||[]).map(p=>'#'+p.n+' → '+p.base+' · '+p.st).join('\n');return `<span class="prc ${r.c}" title="${escH(all||'Chưa thấy PR trên GitHub')}"><i class="ti ti-${r.ic}" aria-hidden="true"></i>${r.tx}${r.p?` <a href="${r.p.url}" style="color:inherit;text-decoration:underline">#${r.p.n}</a>`:''}</span>`;};
+function notibar(){const el=document.getElementById('notibar');const L=NOTI&&NOTI.list||[];
+ if(!L.length){el.className='';return;}
+ el.className='show';el.innerHTML=`<div style="display:flex;align-items:center;gap:8px"><b><i class="ti ti-bell-ringing" aria-hidden="true"></i> ${L.length} thông báo mới từ GitHub / KH Tuần</b><span class="sb" style="color:inherit;opacity:.8">GitHub ${NOTI.prsAt?fdt(NOTI.prsAt):'—'} · KH ${NOTI.planAt?fdt(NOTI.planAt):'—'}</span><button id="seen" style="margin-left:auto;font-size:11px;height:24px">Đã xem</button></div><ul>${L.map(n=>`<li><b>TK${escH(n.id)}</b>: ${escH(n.text)} <span style="opacity:.7">· ${fdt(n.at)}</span></li>`).join('')}</ul>`;
+ document.getElementById('seen').onclick=()=>{NOTI.list=[];notibar();persist(['seen']);};}
+let scOpen=null;
+const fdt=s=>{if(!s)return'';const d=new Date(s),p=n=>String(n).padStart(2,'0');return p(d.getHours())+':'+p(d.getMinutes())+' '+p(d.getDate())+'/'+p(d.getMonth()+1);};
+function scpop(){const box=document.getElementById('scpop');const t=scOpen&&T.find(z=>z.id===scOpen);if(!t){box.innerHTML='';return;}
+ box.innerHTML=`<div class="ov scp"><div class="dlg" role="dialog" aria-label="Test Scenario TK${t.id}" style="max-width:860px">
+  <div class="hd"><i class="ti ti-list-details" aria-hidden="true" style="font-size:18px"></i><span style="font-weight:500;font-size:14px">TK${t.id} · Test Scenario</span><span class="gbox" style="margin-left:auto">${gbtn(t,'3')}</span><button class="bt sccls" style="margin-left:8px" aria-label="Đóng">✕</button></div>
+  <div class="sb" style="margin:2px 0 8px">${escH(t.name)}${t.sc?` · <a href="${'file:///'+encodeURI(t.sc.file.replace(/\\/g,'/'))}">${escH(t.sc.file.split(/[\\/]/).pop())}</a> · cập nhật ${fdt(t.sc.mtime)}`:''}</div>
+  <div class="mdv">${t.sc?md(t.sc.text):'<p class="m">Chưa có Test Scenario — bước 3 chưa chạy (file Ticket_'+t.id+'/Test_Scenario_'+t.id+'.md).</p>'}</div>
+  <div style="display:flex;gap:8px;margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;align-items:center"><span class="sb">✓ = cho AI qua bước 4 (viết testcase) · ✕ = AI sửa lại scenario</span><button class="sccls" style="margin-left:auto;font-size:12px;height:30px">Đóng</button></div></div></div>`;
+ box.querySelectorAll('.sccls').forEach(b=>b.onclick=()=>{scOpen=null;scpop();save();});
+ box.querySelector('.scp').onclick=e=>{if(e.target.classList.contains('scp')){scOpen=null;scpop();save();}};}
+function save(){if(window.PIPE&&PIPE.save)PIPE.save({scOpen,openId,p1Open,rpOpen});}
+let p1Open=false,fOpen=null,draft=null,openId=null,cards=[];
+const rtMsg=(t,ids)=>`Retest ${ids.map(c=>'TK'+t.id+'_'+c).join(', ')} lần ${t.lan+1} trên ${t.env} (${t.f.web||'URL chưa điền'}, tổ chức ${t.f.org||'chưa điền'}). Chỉ chạy đúng các case này, ghi vào nhóm cột TEST LẦN ${t.lan+1}.`;
+
+function s1(){const ap=AP(),ok=A.filter(a=>a.st).length;
+ document.getElementById('s1sum').innerHTML=`<span>${T.length} ticket tuần</span><span class="p">✓ ${ap.length} chạy test</span><span class="f">✕ ${T.length-ap.length} không test</span><span class="${ok===3?'p':'w'}"><i class="ti ti-lock" aria-hidden="true"></i> Tài khoản ${ok}/3</span>`;
+ document.getElementById('s1chips').innerHTML=(ap.map(t=>`<span style="display:inline-flex;gap:4px;align-items:center;margin:2px 8px 2px 0"><span class="okb">TK${t.id}</span>${khChip(t)}${prChip(t)}</span>`).join('')||'<span class="m">Chưa tick ticket nào</span>')+(()=>{const n=T.filter(t=>prSum(t).c==='ok'||prSum(t).tx==='PR production đang mở').length;return n?`<div class="sb" style="margin-top:4px"><i class="ti ti-rocket" aria-hidden="true"></i> ${n}/${T.length} ticket tuần đã có PR production — bấm để xem và tick ✓</div>`:'';})();
+ const b=document.getElementById('s1');b.classList.toggle('sel',p1Open);b.setAttribute('aria-expanded',p1Open);document.getElementById('s1ch').className=`ti ti-chevron-${p1Open?'up':'down'} m`;}
+function p1(){const box=document.getElementById('p1');if(!p1Open){box.innerHTML='';return;}
+ box.innerHTML=`<div class="ov" id="ov1"><div class="dlg" role="dialog" aria-label="Bước 1 tài khoản và duyệt ticket" style="max-width:620px">
+  <div class="hd"><i class="ti ti-calendar" aria-hidden="true" style="font-size:18px"></i><span style="font-weight:500;font-size:14px">Bước 1 · Tài khoản và duyệt ticket</span><button class="bt" id="c1" style="margin-left:auto" aria-label="Đóng">✕</button></div>
+  <div style="font-weight:500;margin:10px 0 4px"><i class="ti ti-lock" aria-hidden="true"></i> Kết nối tài khoản <span class="sb">· QC tự đăng nhập, không nhập mật khẩu ở đây</span></div>
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">${A.map(a=>`<div class="card" style="display:flex;flex-direction:column;gap:4px;padding:8px 10px">
+   <div class="hd"><i class="ti ti-${a.ic}" aria-hidden="true" style="font-size:16px"></i><span style="font-weight:500">${a.name}</span><span class="${a.perm}" style="margin-left:auto">${a.permT}</span></div>
+   <span class="sb">${a.use}</span><span>${a.st?'<span class="okb">✓ Đã kết nối</span>':'<span class="nob">Chưa đăng nhập</span>'}</span>
+   <span style="font-size:11px;color:var(--text-secondary)">${a.how}${a.cmd?` <code>${a.cmd}</code>`:''}</span>
+   <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${a.url?`<a href="${a.url}" style="font-size:11px">Đăng nhập <i class="ti ti-external-link" aria-hidden="true"></i></a>`:''}<button data-ck="${a.k}" style="font-size:11px;height:24px;margin-left:auto">Kiểm tra ↗</button></span></div>`).join('')}</div>
+  <div class="hd" style="margin:14px 0 2px"><span style="font-weight:500"><i class="ti ti-list-check" aria-hidden="true"></i> Duyệt ticket chạy test</span><span class="sb">Tick là áp dụng ngay xuống các bước sau</span><span style="margin-left:auto;display:flex;gap:4px"><button id="allY" style="font-size:11px;height:24px">✓ Tất cả</button><button id="allN" style="font-size:11px;height:24px">✕ Tất cả</button></span></div>
+  <div class="trow m" style="border-top:none;font-size:11px"><span>Ticket</span><span>Tên · module</span><span>KH · GitHub</span><span>Hạn</span><span style="text-align:center">Test?</span></div>
+  ${T.map((t,i)=>`<div class="trow"><span class="nm">${t.id}</span><span style="min-width:0">${t.name} ${t.type!=='—'?`<span class="chip">${t.type}</span>`:''}<br><span class="sb">${t.mod}</span>${t.warn?`<br><span class="w" style="font-size:11px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> ${t.warn}</span>`:''}</span><span style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">${khChip(t)}${prChip(t)}</span><span class="m">${t.dl}</span>
+   <span style="display:flex;gap:4px;justify-content:center"><button class="yn y${t.y?' on':''}" data-i="${i}" data-v="1" aria-label="Chạy test TK${t.id}" aria-pressed="${!!t.y}">✓</button><button class="yn n${t.y?'':' on'}" data-i="${i}" data-v="0" aria-label="Không test TK${t.id}" aria-pressed="${!t.y}">✕</button></span></div>`).join('')}
+  <div style="display:flex;gap:8px;align-items:center;margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px">
+   <span class="er" id="e1" style="font-size:12px"></span>
+   <span class="sb" style="margin-left:auto">${AP().length} ticket đang ở các bước sau</span>
+   <button id="ok1" style="font-size:12px;height:30px">Xong</button></div>
+ </div></div>`;
+ const close=()=>{p1Open=false;s1();p1();};
+ box.querySelector('#c1').onclick=close;box.querySelector('#ok1').onclick=close;
+ box.querySelector('#ov1').onclick=e=>{if(e.target.id==='ov1')close();};
+ box.querySelectorAll('[data-ck]').forEach(b=>b.onclick=()=>{const a=A.find(x=>x.k===b.dataset.ck);sendPrompt(`Tôi đã đăng nhập ${a.name}. Kiểm tra phiên đăng nhập (${a.permT.toLowerCase()}), không thay đổi dữ liệu.`);});
+ box.querySelectorAll('.yn').forEach(b=>b.onclick=()=>{const t=T[b.dataset.i];if(b.dataset.v==='1'&&t.warn){document.getElementById('e1').textContent=`TK${t.id}: ${t.warn}`;return;}t.y=+b.dataset.v;apply();persist([t.y?'approve':'reject',t.id]);});
+ box.querySelector('#allY').onclick=()=>{const ids=T.filter(t=>!t.warn).map(t=>t.id);T.forEach(t=>{if(!t.warn)t.y=1});apply();if(ids.length)persist(['approve',...ids]);};
+ box.querySelector('#allN').onclick=()=>{T.forEach(t=>t.y=0);apply();persist(['reject','--all']);};}
+function apply(){const ids=AP().map(t=>t.id);if(fOpen&&!ids.includes(fOpen))fOpen=null;if(openId&&!ids.includes(openId))openId=null;refresh();}
+
+function down(){const ap=AP();const g={};ap.forEach(t=>(g[t.grp]=g[t.grp]||[]).push(t.id));
+ document.getElementById('an').textContent=Object.entries(g).map(([k,v])=>`${k}: ${v.join(', ')}`).join(' · ')||'Chưa có ticket được tick ở bước 1';
+ const L={};ap.forEach(t=>(L[t.lane]=L[t.lane]||[]).push(t.id));
+ document.getElementById('pl').textContent=Object.keys(L).sort().map(k=>`Luồng ${k}: ${L[k].join(' → ')}`).join(' · ')||'—';
+ document.getElementById('lanes').style.gridTemplateColumns=`repeat(${Math.max(Object.keys(L).length,1)},minmax(0,1fr))`;
+ document.getElementById('lanes').innerHTML=Object.keys(L).sort().map(k=>`<div style="display:flex;flex-direction:column;min-width:0"><div style="text-align:center;font-size:11px"><span class="chip p">Luồng ${k}</span> <span class="sb">${L[k].length>1?'tuần tự':'độc lập'}</span></div><div style="text-align:center;font-weight:500;font-size:12px">${L[k].join(' → ')}</div>`+
+  step(2,'git-branch','agent-git','Nhánh, PR, đọc diff',L[k],r2)+step(3,'list-details','agent-scenario','[1] Phân tích / Test Scenario · bấm để xem · dừng chờ QC',L[k],r3,1)+step(4,'table','agent-testcase','[2] Sinh testcase vào Sheet · dừng chờ QC',L[k],r4,1)+`</div>`).join('')||'<span class="m">Chưa có ticket</span>';
+ document.querySelectorAll('.scb').forEach(b=>b.onclick=()=>{scOpen=b.dataset.sc;scpop();save();});
+ document.getElementById('rel').innerHTML=ap.map(t=>{const r=t.rep;const v=r&&r.total?`<span class="${r.verdict==='PASS'?'okb':'nob'}" style="font-weight:600">==> ${r.verdict}</span><span class="sb">${r.pass}/${r.total} PASS${r.fail?' · '+r.fail+' Fail':''}${r.pend?' · '+r.pend+' Pending':''}${r.prod?'':' · chưa Production'}</span>`:'<span class="m">Chưa có kết quả test</span>';return `<div class="lrow" data-tid="${t.id}"><span class="nm">TK${t.id}</span><span class="lin">${v}<button class="rpb scb" data-rp="${t.id}"><i class="ti ti-report" aria-hidden="true"></i> Report</button></span><span class="gbox">${gbtn(t,'7')}</span></div>`}).join('')||'<span class="m">Chưa có ticket</span>';
+ document.querySelectorAll('.rpb').forEach(b=>b.onclick=()=>{rpOpen=rpOpen===b.dataset.rp?null:b.dataset.rp;rppop();save();});}
+let rpOpen=null;
+function rppop(){const box=document.getElementById('rppop');const t=rpOpen&&T.find(z=>z.id===rpOpen);if(!t||!t.rep){box.innerHTML='';return;}const r=t.rep;
+ const html=escH(r.text).replace(/^(==&gt; )(PASS|FAIL)(.*)$/m,(m,a,v,rest)=>`<b class="${v==='PASS'?'p':'f'}" style="font-size:15px">${a}${v}</b>${rest}`).replace(/^(REPORT .*)$/m,'<b>$1</b>').replace(/(TK\d+_\d+) \((Fail|Pending)/g,(m,k,s)=>`<b>${k}</b> (<span class="${s==='Fail'?'f':'w'}">${s}</span>`);
+ box.innerHTML=`<div class="ov rpp"><div class="dlg" role="dialog" aria-label="Report TK${t.id}" style="max-width:720px">
+  <div class="hd"><i class="ti ti-report" aria-hidden="true" style="font-size:18px"></i><span style="font-weight:500;font-size:14px">Report nhanh · TK${t.id}</span><button class="bt rpcls" style="margin-left:auto" aria-label="Đóng">✕</button></div>
+  <pre style="white-space:pre-wrap;font-family:inherit;font-size:12.5px;line-height:1.6;background:var(--surface-1);padding:10px 12px;border-radius:8px;margin:10px 0 0">${html}</pre>
+  <div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="sb">PASS = DONE + Suggest · ==> PASS khi không còn Fail / Pending / case chưa chạy</span><button class="rpcp" style="margin-left:auto;font-size:12px;height:30px;color:var(--text-accent);border-color:var(--border-accent)"><i class="ti ti-copy" aria-hidden="true"></i> Sao chép report</button><button class="rpcls" style="font-size:12px;height:30px">Đóng</button></div></div></div>`;
+ box.querySelectorAll('.rpcls').forEach(b=>b.onclick=()=>{rpOpen=null;rppop();save();});
+ box.querySelector('.rpp').onclick=e=>{if(e.target.classList.contains('rpp')){rpOpen=null;rppop();save();}};
+ box.querySelector('.rpcp').onclick=()=>{if(window.__vscode)window.__vscode.postMessage({type:'copy',text:r.text});else if(navigator.clipboard)navigator.clipboard.writeText(r.text);const tt=document.getElementById('toast');if(tt){tt.textContent='Đã sao chép report';tt.style.display='block';setTimeout(()=>tt.style.display='none',2000);}};}
+const byId=id=>T.find(z=>z.id===id);
+const wtChip=t=>t.wt?`<span class="chip" title="Worktree local ${escH(t.wt.branch)}@${escH(t.wt.commit)}"><i class="ti ti-server" aria-hidden="true"></i> :${t.wt.port}</span><a href="http://localhost:${t.wt.port}" style="font-size:11px">mở</a>`:'';
+const solChip=t=>!t.sol?'<span class="sb">solution ?</span>':t.sol.missing?'<span class="qcb" title="Chưa có .workspace/**/ticket_'+t.id+'*.md trên nhánh / beta / production">⚠ chưa có solution</span>':`<a class="chip" href="${'file:///'+encodeURI(String(t.sol.local||'').replace(/\\/g,'/'))}" title="${escH(t.sol.ref+':'+(t.sol.files||[]).join(', '))}"><i class="ti ti-file-check" aria-hidden="true"></i> Solution @${escH(t.sol.commit)}</a>`;
+const r2=t=>wtChip(t)+solChip(t)+r2b(t);
+const r2b=t=>{const g=t.git||{};return g.branch?`<i class="ti ti-git-branch" aria-hidden="true"></i><span class="brn">${escH(g.branch)}</span>${g.cur?'<span class="okb">đang checkout</span>':''}${g.pr?`<span class="chip">PR #${escH(g.pr)}</span>`:''}${g.commit?`<span class="sb">${escH(g.commit)}</span>`:''}${g.auto?'<span class="sb">(tự dò)</span>':''}`:'<span class="m">Chưa xác định nhánh</span>'};
+const r3=t=>t.sc?`<button class="scb" data-sc="${t.id}"><i class="ti ti-file-text" aria-hidden="true"></i> Xem scenario</button><span class="sb">cập nhật ${fdt(t.sc.mtime)}</span>`:`<button class="scb" data-sc="${t.id}" style="color:var(--text-muted);border-color:var(--border)">Chưa có scenario</button>`;
+const r4=t=>t.r0?`<span>${t.total} testcase</span>${sidOf(t.f)?`<a href="${link(t,t.r0,t.r1)}">dòng ${t.r0}–${t.r1} <i class="ti ti-external-link" aria-hidden="true"></i></a>`:''}`:'<span class="m">Chưa ghi Sheet</span>';
+const step=(n,ic,nm,sub,ids,row,gate)=>{const ts=ids.map(byId).filter(Boolean);const wait=gate&&ts.some(t=>inMode(t,String(n))&&GV(t,String(n))!=='ok');return `<div class="ln"></div><div class="card"><div class="hd"><div class="ic"><i class="ti ti-${ic}" aria-hidden="true"></i></div><div style="min-width:0"><div class="nm">${n} · ${nm}</div><div class="sb">${sub}</div></div></div><div style="margin-top:4px">${ts.map(t=>inMode(t,String(n))?`<div class="lrow" data-tid="${t.id}"><span class="nm">TK${t.id}</span><span class="lin">${row(t)}</span><span class="gbox">${gbtn(t,String(n))}</span></div>`:`<div class="lrow" style="opacity:.5"><span class="nm">TK${t.id}</span><span class="lin m">Không chạy ở chế độ [${modeOf(t)}]</span><span></span></div>`).join('')}</div>${wait?'<div class="gate"><i class="ti ti-player-pause" aria-hidden="true"></i> Chờ QC duyệt</div>':''}</div>`;};
+
+function tiles(){const ap=AP();const ok=ap.filter(t=>!Object.keys(check(t.f)).length).length;
+ document.getElementById('fsum').textContent=ap.length?`${ok}/${ap.length} ticket đủ thông tin · bấm vào ô để điền`:'';
+ document.getElementById('tiles').innerHTML=ap.map(t=>{const m=Object.keys(check(t.f)).length;
+  return `<button class="tile${fOpen===t.id?' sel':''}" data-f="${t.id}" aria-expanded="${fOpen===t.id}"><span class="nm">TK${t.id}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</span><span class="sb">${t.env}${t.f.qcn?' · '+t.f.qcn:''} · Chế độ [${modeOf(t)}]</span>${(t.orgDup||[]).length?`<span class="nob" title="Beta/Production dùng chung dữ liệu — mỗi ticket 1 tổ chức">Trùng tổ chức với ${t.orgDup.map(x=>'TK'+x).join(', ')}</span>`:''}<span>${m?`<span class="qcb">Thiếu ${m} mục</span>`:'<span class="okb">Đủ thông tin</span>'}</span></button>`}).join('')||'<span class="m" style="grid-column:1/-1;font-size:12px">Chưa có ticket được tick ở bước 1</span>';
+ document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{if(fOpen===b.dataset.f)fOpen=null;else{fOpen=b.dataset.f;draft={...T.find(x=>x.id===fOpen).f};}tiles();fpop();});}
+function fpop(){const box=document.getElementById('fpop');if(!fOpen){box.innerHTML='';return;}
+ const ap=AP(),i=ap.findIndex(x=>x.id===fOpen),t=ap[i],f=draft;
+ const inp=(k,lab,ph,full)=>`<div${full?' style="grid-column:1/-1"':''}><label class="lb" for="d_${k}">${lab}</label><input id="d_${k}" data-k="${k}" value="${f[k]||''}" placeholder="${ph}"><div class="er" id="de_${k}"></div></div>`;
+ box.innerHTML=`<div class="ov fp"><div class="dlg" role="dialog" aria-label="Thông tin QC TK${t.id}" style="max-width:520px">
+  <div class="hd"><i class="ti ti-forms" aria-hidden="true" style="font-size:18px"></i><span style="font-weight:500;font-size:14px">TK${t.id} · Thông tin QC</span><button class="bt fcls" style="margin-left:auto" aria-label="Đóng">✕</button></div>
+  <div class="sb" style="margin-top:2px">${t.name} · ${t.env} · Luồng ${t.lane}</div>
+  ${i?`<button class="fcp" style="font-size:11px;height:24px;margin-top:8px">Dùng giống TK${ap[i-1].id}</button>`:''}
+  <div class="g2">${inp('sh','Link Google Sheet','https://docs.google.com/spreadsheets/d/…',1)}${inp('tab','Tên tab','TESTCASE - 2026')}<div><label class="lb" for="d_web">URL test Web</label><input id="d_web" data-k="web" list="weblist" value="${f.web||''}" placeholder="https://dev1.fastdo.vn hoặc localhost"><datalist id="weblist"><option value="http://localhost:3000">Localhost — dotnet run nhánh ticket</option><option value="https://dev1.fastdo.vn">Beta (dev1)</option><option value="https://work.fastdo.vn">Production</option></datalist><div class="er" id="de_web"></div><div class="sb" id="webhint" style="margin-top:3px">${isLocal(f.web)?LOCAL_HINT:''}</div></div>
+   <div><label class="lb" for="d_app">Test App</label><select id="d_app" data-k="app">${['LDPlayer','Không test App'].map(o=>`<option ${f.app===o?'selected':''}>${o}</option>`).join('')}</select></div>
+   ${inp('org','Tổ chức test','Water Quality - NH3T TEAM')}
+   <div style="grid-column:1/-1"><label class="lb" for="d_mode">Chế độ lần này</label><select id="d_mode" data-k="mode">${['4','1','2','3'].map(o=>`<option value="${o}" ${String(f.mode||'4')===o?'selected':''}>${MODE_LABEL(t)[o]}</option>`).join('')}</select></div>
+   <div style="grid-column:1/-1"><label class="lb" for="d_qcn">QC thực hiện</label><select id="d_qcn" data-k="qcn"><option value="">Chọn QC</option>${['Giang','Nhi','Hạnh'].map(o=>`<option ${f.qcn===o?'selected':''}>${o}</option>`).join('')}</select><div class="er" id="de_qcn"></div></div></div>
+  <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end"><button class="fcls2" style="font-size:12px;height:30px">Huỷ</button><button class="fsave" style="font-size:12px;height:30px;color:var(--text-accent);border-color:var(--border-accent)">Lưu</button></div></div></div>`;
+ box.querySelectorAll('[data-k]').forEach(el=>{const h=()=>{draft[el.dataset.k]=el.value;if(el.dataset.k==='web'){const hn=document.getElementById('webhint');if(hn)hn.innerHTML=isLocal(el.value)?LOCAL_HINT:'';}const e=document.getElementById('de_'+el.dataset.k);if(e)e.textContent='';};el.addEventListener('input',h);el.addEventListener('change',h);});
+ const close=()=>{fOpen=null;tiles();fpop();};
+ box.querySelector('.fcls').onclick=close;box.querySelector('.fcls2').onclick=close;box.querySelector('.fp').onclick=e=>{if(e.target.classList.contains('fp'))close();};
+ const cp=box.querySelector('.fcp');if(cp)cp.onclick=()=>{draft={...ap[i-1].f};fpop();};
+ box.querySelector('.fsave').onclick=()=>{const e=check(draft);Object.keys(REQ).forEach(k=>{const el=document.getElementById('de_'+k);if(el)el.textContent=e[k]||'';});if(Object.keys(e).length)return;draft.web=normWeb(draft.web);t.f={...draft};if(isLocal(t.f.web))t.env='Localhost';{const a=['set',t.id];[['sheet','sh'],['tab','tab'],['web','web'],['app','app'],['org','org'],['qc','qcn'],['mode','mode']].forEach(([o,k])=>{if(t.f[k])a.push('--'+o,t.f[k]);});persist(a);}fOpen=null;document.getElementById('e_go').textContent='';refresh();};}
+
+function popup(t){const S=selOf(t.id),n=S.size;
+ return `<div class="ov pop" style="margin-top:-4px"><div class="dlg" role="dialog" aria-label="Cần QC check TK${t.id}" style="max-width:640px">
+  <div class="hd"><i class="ti ti-alert-triangle w" aria-hidden="true" style="font-size:18px"></i><span style="font-weight:500;font-size:14px">TK${t.id} · Cần QC check (${t.qc.length})</span><button class="bt cls" style="margin-left:auto" aria-label="Đóng">✕</button></div>
+  <div class="sb" style="margin:4px 0 6px">${t.name} · ${t.env} · Lần ${t.lan} → retest sẽ ghi vào TEST LẦN ${t.lan+1} · ${t.f.org||'chưa điền tổ chức'}</div>
+  <div style="display:flex;gap:6px;align-items:center;margin-bottom:2px">
+   <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" class="selall" ${n===t.qc.length&&n?'checked':''} aria-label="Chọn tất cả case"> Chọn tất cả</label>
+   <button class="selfail rtb">Chọn case Fail</button><span class="m" style="margin-left:auto;font-size:11px">${n} case đã chọn</span></div>
+  ${t.qc.map(q=>{const row=t.r0+parseInt(q[0],10)-1,on=S.has(q[0]);return `<div class="row${on?' on':''}"><input type="checkbox" class="cb" data-c="${q[0]}" ${on?'checked':''} aria-label="Chọn TK${t.id}_${q[0]}"><span class="nm">${q[0]}</span><span style="color:${C[q[1]]}">● ${q[1]}</span><span style="min-width:0">${q[2]}<br><span class="m">${q[3]}</span></span>${sidOf(t.f)?`<a href="${link(t,row)}" style="white-space:nowrap">Dòng ${row} <i class="ti ti-external-link" aria-hidden="true"></i></a>`:'<span class="m">—</span>'}<button class="rtb rt1" data-c="${q[0]}" aria-label="Retest TK${t.id}_${q[0]}"><i class="ti ti-refresh" aria-hidden="true"></i> Retest ↗</button></div>`}).join('')}
+  <div style="display:flex;gap:8px;margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;align-items:center;flex-wrap:wrap">${sidOf(t.f)?`<a href="${link(t,t.r0,t.r1)}">Mở cả dải testcase dòng ${t.r0}–${t.r1} <i class="ti ti-external-link" aria-hidden="true"></i></a>`:'<span class="m">Điền link Sheet ở bước 1c để có link</span>'}
+   <span class="er rterr" style="font-size:12px;margin-left:auto"></span>
+   <button class="rtsel" style="font-size:12px;height:30px;color:var(--text-accent);border-color:var(--border-accent)"><i class="ti ti-refresh" aria-hidden="true"></i> Retest ${n} case đã chọn ↗</button></div></div></div>`;}
+function runs(){let ran=0,all=0;
+ document.getElementById('runs').innerHTML=AP().map(t=>{const done=Object.values(t.n).reduce((a,b)=>a+b,0);ran+=done;all+=t.total;const pct=t.total?Math.round(done/t.total*100):0;
+  const seg=Object.entries(t.n).map(([k,v])=>`<div style="width:${v/t.total*100}%;background:${C[k]}"></div>`).join('');
+  const tl=t.r0&&sidOf(t.f)?`<a href="${link(t,t.r0,t.r1)}">Testcase dòng ${t.r0}–${t.r1} <i class="ti ti-external-link" aria-hidden="true"></i></a>`:`<span class="m">${t.r0?'Chưa có link Sheet':'Chưa ghi Sheet'}</span>`;
+  const qb=t.qc.length?`<button class="qbtn" data-q="${t.id}" aria-expanded="${openId===t.id}"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Cần QC check (${t.qc.length}) <i class="ti ti-chevron-${openId===t.id?'up':'down'}" aria-hidden="true"></i></button>`:'<span class="p" style="font-size:12px"><i class="ti ti-circle-check" aria-hidden="true"></i> Không có case cần QC check</span>';
+  return `<div><div class="card" data-id="${t.id}"><div class="hd" style="flex-wrap:wrap"><span class="nm">TK${t.id}</span><span>${t.name}</span><span class="chip">Luồng ${t.lane}</span><span class="chip">${t.env}</span><span class="chip">Lần ${t.lan}</span><span class="chip" title="${escH(MODE_LABEL(t)[modeOf(t)])}">Chế độ [${modeOf(t)}]</span>${t.real?'':'<span class="chip m">dữ liệu mẫu</span>'}<span class="gbox" style="margin-left:auto" title="QC chấp nhận kết quả test">${inMode(t,'6')?gbtn(t,'6'):'<span class="m" style="font-size:11px">[3] không chạy ở chế độ ['+modeOf(t)+']</span>'}</span></div>
+  <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px"><span style="font-size:22px;font-weight:500">${done}/${t.total}</span><span class="m">testcase đã chạy · ${pct}%</span><span style="margin-left:auto">${tl}</span></div>
+  <div class="bar">${seg}</div><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">${['DONE','Fail','Suggest','Pending'].map(k=>`<span style="color:${C[k]}">● ${k} ${t.n[k]||0}</span>`).join('')}<span class="m">● Chưa chạy ${t.total-done}</span><span style="margin-left:auto">${qb}</span></div></div>${openId===t.id?popup(t):''}</div>`}).join('')||'<span class="m" style="font-size:12px">Chưa có ticket</span>';
+ document.getElementById('tot').textContent=`Tổng tuần: ${ran}/${all} testcase đã chạy`;
+ document.querySelectorAll('.qbtn').forEach(b=>b.onclick=()=>{openId=openId===b.dataset.q?null:b.dataset.q;runs();save();});
+ document.querySelectorAll('.pop').forEach(p=>{const t=T.find(x=>x.id===openId),S=selOf(t.id);
+  p.onclick=e=>{if(e.target===p){openId=null;runs();}};p.querySelector('.cls').onclick=()=>{openId=null;runs();};
+  p.querySelectorAll('.cb').forEach(c=>c.onchange=()=>{c.checked?S.add(c.dataset.c):S.delete(c.dataset.c);runs();});
+  p.querySelector('.selall').onchange=e=>{S.clear();if(e.target.checked)t.qc.forEach(q=>S.add(q[0]));runs();};
+  p.querySelector('.selfail').onclick=()=>{S.clear();t.qc.filter(q=>q[1]==='Fail').forEach(q=>S.add(q[0]));runs();};
+  p.querySelectorAll('.rt1').forEach(b=>b.onclick=()=>sendPrompt(rtMsg(t,[b.dataset.c])));
+  p.querySelector('.rtsel').onclick=()=>{if(!S.size){p.querySelector('.rterr').textContent='Chọn ít nhất 1 case';return;}sendPrompt(rtMsg(t,t.qc.map(q=>q[0]).filter(c=>S.has(c))));};});
+ bind();}
+function paint(){let o=0,n=0,w=0;AP().forEach(t=>GATES.forEach(x=>{const v=GV(t,x);if(v==='ok')o++;else if(v==='no')n++;else w++;}));cOk.textContent='● '+o+' chấp nhận';cNo.textContent='● '+n+' từ chối';cWait.textContent='● '+w+' chờ duyệt';}
+function bind(){paint();}
+function refresh(){notibar();s1();p1();down();tiles();fpop();runs();scpop();rppop();}
+document.getElementById('s1').onclick=()=>{p1Open=!p1Open;s1();p1();save();};
+{const st=window.PIPE&&PIPE.load?PIPE.load():null;if(st){scOpen=st.scOpen||null;openId=st.openId||null;p1Open=!!st.p1Open;rpOpen=st.rpOpen||null;}}
+refresh();
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(rpOpen){rpOpen=null;rppop();save();}else if(scOpen){scOpen=null;scpop();save();}else if(p1Open){p1Open=false;s1();p1();}else if(fOpen){fOpen=null;tiles();fpop();}else if(openId){openId=null;runs();}});
+document.getElementById('all').onclick=()=>{AP().forEach(t=>{t.g=t.g||{};GATES.forEach(x=>t.g[x]='ok')});refresh();persist(['gate','all','ok','--all']);};
+document.getElementById('reset').onclick=()=>{AP().forEach(t=>{t.g={}});refresh();persist(['gate','all','reset','--all']);};
+document.getElementById('go').onclick=()=>{const ap=AP();const bad=ap.filter(t=>Object.keys(check(t.f)).length);
+ if(!ap.length){document.getElementById('e_go').textContent='Chưa có ticket được tick ở bước 1';return;}
+ if(bad.length){document.getElementById('e_go').textContent=`Còn thiếu thông tin: ${bad.map(t=>'TK'+t.id).join(', ')} — bấm vào ô để điền`;return;}
+ document.getElementById('e_go').textContent='';
+ sendPrompt('Chạy pipeline ticket tuần. Chỉ test các ticket đã tick: '+ap.map(t=>'TK'+t.id).join(', ')+'. Không test: '+T.filter(t=>!t.y).map(t=>'TK'+t.id).join(', ')+'. 1a, 1b chạy tự động.\nThông tin QC theo từng ticket:\n'+ap.map(t=>`- TK${t.id}: Sheet ${t.f.sh} | Tab ${t.f.tab} | Web ${t.f.web} | App ${t.f.app} | Tổ chức ${t.f.org} | QC ${t.f.qcn} | Chế độ ${MODE_LABEL(t)[modeOf(t)]}`).join('\n'));};
+const ask=document.getElementById('ask');ask.oninput=()=>document.getElementById('e_ask').textContent='';
+document.getElementById('send').onclick=()=>{if(!ask.value.trim()){document.getElementById('e_ask').textContent='Nhập nội dung trả lời agent trước';return}sendPrompt(ask.value.trim())};
+</script>
+<style>
+@keyframes runpulse{0%{box-shadow:0 0 0 0 rgba(90,162,238,.55)}70%{box-shadow:0 0 0 10px rgba(90,162,238,0)}100%{box-shadow:0 0 0 0 rgba(90,162,238,0)}}
+@keyframes rundot{50%{opacity:.25}}
+.running{position:relative;border:2px solid var(--border-accent)!important;background:var(--bg-accent)!important;animation:runpulse 1.8s infinite;border-radius:12px}
+.sec.running{padding:6px 10px;margin-left:-10px;margin-right:-10px}
+.done-step{opacity:.55}
+.rbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;background:var(--border-accent);color:#fff;white-space:nowrap}
+.rbadge::before{content:"";width:7px;height:7px;border-radius:50%;background:#fff;animation:rundot 1s infinite}
+#runbar{display:none;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;margin-bottom:10px;border-radius:10px;border:2px solid var(--border-accent);background:var(--bg-accent);color:var(--text-accent);font-size:12px;animation:runpulse 1.8s infinite}
+#runbar.show{display:flex}
+#runbar .rl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
+.lrow.rowrun{background:var(--bg-accent);outline:2px solid var(--border-accent);border-radius:8px;padding-left:6px;padding-right:6px;animation:runpulse 1.8s infinite}
+.tile.rowrun{border:2px solid var(--border-accent);background:var(--bg-accent);animation:runpulse 1.8s infinite}
+#runbar.idle{animation:none;border-width:1px;border-color:var(--border);background:var(--surface-2);color:var(--text-secondary)}
+@media (prefers-reduced-motion:reduce){.running,#runbar,.rbadge::before{animation:none}}
+</style>
+<script>
+const RUN=null;
+(function(){
+ const ORDER=['1','1a','1b','1c','2-4','5-6','7'];
+ const KEY={'1':'1','1a':'1a','1b':'1b','1c':'1c','2':'2-4','3':'2-4','4':'2-4','5':'5-6','6':'5-6','7':'7'};
+ const NAME={'1':'Bước 1 · Đọc ticket + duyệt','1a':'Bước 1a · Phân nhóm','1b':'Bước 1b · Kế hoạch','1c':'Bước 1c · Thông tin QC','2':'Bước 2 · Nhánh + code change','3':'Bước 3 · Test Scenario','4':'Bước 4 · Testcase vào Sheet','5':'Bước 5 · Chạy test','6':'Bước 6 · Retest','7':'Bước 7 · Report / hoàn thành'};
+ const ago=t=>{if(!t)return'';const m=Math.max(0,Math.round((Date.now()-new Date(t))/60000));return m<1?'vừa bắt đầu':m<60?m+' phút trước':Math.floor(m/60)+' giờ '+(m%60)+' phút trước'};
+ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ // danh sách đang chạy: bước chung (không gắn ticket) + từng ticket chạy song song
+ const R=RUN||{};const ACT=[...(R.g&&R.g.step?[{step:String(R.g.step),note:R.g.note,at:R.g.at}]:[]),...Object.entries(R.t||{}).filter(([,r])=>r&&r.step).map(([id,r])=>({id,step:String(r.step),note:r.note,at:r.at}))];
+ const badge=(host,txt)=>{let b=host.querySelector(':scope > .rbadge, :scope .nm > .rbadge');if(txt){if(!b){b=document.createElement('span');b.className='rbadge';b.style.marginLeft='6px';(host.querySelector('.nm')||host).appendChild(b);}b.textContent=txt;}else if(b)b.remove();};
+ let busy=false;
+ function mark(){if(busy)return;busy=true;try{
+  const keys=new Set(ACT.map(a=>KEY[a.step]));const idx=ACT.map(a=>ORDER.indexOf(KEY[a.step])).filter(i=>i>=0);const cur=idx.length?Math.min(...idx):-1;
+  // khối bước (1, 1a, 1b, 1c, 2–4, 5–6, 7)
+  document.querySelectorAll('[data-step]').forEach(el=>{const k=el.dataset.step,i=ORDER.indexOf(k),on=keys.has(k);
+   el.classList.toggle('running',on);el.classList.toggle('done-step',!on&&cur>0&&i>=0&&i<cur&&k!=='1');
+   const ids=ACT.filter(a=>KEY[a.step]===k&&a.id).map(a=>'TK'+a.id);badge(el,on?'Đang chạy'+(ids.length?' · '+ids.join(', '):''):'');});
+  // thẻ 2 / 3 / 4: sáng thẻ + đúng dòng ticket đang chạy ở bước đó
+  document.querySelectorAll('#lanes .card').forEach(c=>{const n=((c.querySelector('.nm')||{}).textContent||'').trim().split(' ')[0];
+   const here=ACT.filter(a=>a.step===n);c.classList.toggle('running',here.length>0);
+   badge(c,here.length?'Đang chạy'+(here.filter(a=>a.id).length?' · '+here.filter(a=>a.id).map(a=>'TK'+a.id).join(', '):''):'');
+   c.querySelectorAll('.lrow[data-tid]').forEach(r=>r.classList.toggle('rowrun',here.some(a=>a.id===r.dataset.tid)));});
+  // 1c: ô ticket đang điền
+  document.querySelectorAll('#tiles [data-f]').forEach(el=>el.classList.toggle('rowrun',ACT.some(a=>a.step==='1c'&&a.id===el.dataset.f)));
+  // 5–6: thẻ chạy test của từng ticket
+  document.querySelectorAll('#runs .card[data-id]').forEach(el=>{const a=ACT.find(x=>x.id===el.dataset.id&&KEY[x.step]==='5-6');el.classList.toggle('running',!!a);
+   const hd=el.querySelector('.hd');let b=hd&&hd.querySelector('.rbadge');if(a){if(!b){b=document.createElement('span');b.className='rbadge';hd.insertBefore(b,hd.children[1]||null);}b.textContent=(a.step==='6'?'Đang retest':'Đang chạy test')+(a.note?' · '+a.note:'');}else if(b)b.remove();});
+  // 7: dòng report
+  document.querySelectorAll('#rel .lrow[data-tid]').forEach(r=>r.classList.toggle('rowrun',ACT.some(a=>a.step==='7'&&a.id===r.dataset.tid)));
+  // thanh trạng thái đầu trang: liệt kê mọi ticket đang chạy song song
+  const bar=document.getElementById('runbar');
+  if(ACT.length){bar.className='show';bar.innerHTML=(ACT.length>1?`<div class="rl"><span class="rbadge">Đang chạy</span><b>${ACT.filter(a=>a.id).length} ticket song song</b></div>`:'')+ACT.map(a=>`<div class="rl">${ACT.length>1?'<span style="width:7px;height:7px;border-radius:50%;background:var(--text-accent);display:inline-block"></span>':'<span class="rbadge">Đang chạy</span>'}<b>${esc(NAME[a.step]||'Bước '+a.step)}</b>${a.id?'<span>· TK'+esc(a.id)+'</span>':''}${a.note?'<span>— '+esc(a.note)+'</span>':''}<span style="margin-left:auto;opacity:.8">${ago(a.at)}</span></div>`).join('');bar.style.flexDirection='column';bar.style.alignItems='stretch';}
+  else if(R.last){bar.className='show idle';bar.style.flexDirection='';bar.innerHTML='<i class="ti ti-player-pause"></i> Không có bước nào đang chạy · lần cuối: '+esc(NAME[String(R.last.step)]||'Bước '+R.last.step)+(R.last.ticket?' · TK'+esc(R.last.ticket):'')+' <span style="margin-left:auto;opacity:.8">'+ago(R.last.at)+'</span>';}
+  else bar.className='';
+  const ap=typeof AP==='function'?AP().length:0;
+  document.querySelectorAll('[data-step="1a"] .st,[data-step="1b"] .st').forEach(s=>{if(!ap){s.className='st m';s.innerHTML='<i class="ti ti-clock"></i> Chờ bước 1';}});
+ }finally{busy=false;}}
+ mark();
+ new MutationObserver(()=>{clearTimeout(mark.t);mark.t=setTimeout(mark,30)}).observe(document.querySelector('main'),{childList:true,subtree:true});
+ setInterval(mark,30000);
+})();
+</script>
+</main><div id="toast" role="status"></div></body></html>
